@@ -1,0 +1,22 @@
+# data_catalogue.yml
+     
+inputs:
+
+  house_prices:
+    source: "House Price per Square Metre in England and Wales, 1995-2021. Colchester, Essex: UK Data Service"
+    description: "CSV file holding prices and house information from transacted sales"
+    url: "https://reshare.ukdataservice.ac.uk/855033/2/tranall_link_01042021.zip"
+    zip_folder: "data/inputs/house_prices.zip"
+    location: "data/inputs"
+    file_name: "tranall_link_01042021.csv"
+    col_names:
+    
+
+  # air_quality:
+  #   source: 
+  #   description:
+  #   url:
+  #   zip_folder:
+  #   file_name: ""
+  #   location: "data/inputs"
+  #   col_names:
