@@ -78,7 +78,7 @@ def download_data():
 
     data_catalogue = load_data_catalogue()
 
-    for input in data_catalogue['inputs']:
+    for input in data_catalogue['downloaded_inputs']:
 
         print(f"Accessing information for {input} input...")
         catalogue = data_catalogue['inputs'][input]

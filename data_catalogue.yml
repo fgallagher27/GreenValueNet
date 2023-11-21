@@ -1,22 +1,92 @@
 # data_catalogue.yml
-     
-inputs:
+
+raw_inputs:
+
+  land_cover:
+    source: "UK Centre for Ecology and Hydrology Land Cover Map (2017)"
+    description: "A 20m rasterised map of land cover in the UK"
+    url: "https://catalogue.ceh.ac.uk/documents/f6f86b1a-af6d-4ed8-85af-21ee97ec5333"
+    file_name: "gb2017lcm20m.tif"
+    location: "data/raw_inputs"
+
+  national_parks:
+    source: "Natural England"
+    description: "A shapefile containing the English National Parks"
+    url: "https://naturalengland-defra.opendata.arcgis.com/datasets/d333c7529754444894e2d7f5044d1bbf_0/about"
+    file_name: "National_Parks_(England)___Natural_England.shp"
+    location: "data/raw_inputs"
+
+  green_spaces:
+    source: "OS Data HUb, OS Open Greenspace"
+    description: "A shapefile containing rural and urban green spaces"
+    url: "https://api.os.uk/downloads/v1/products/OpenGreenspace/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
+    file_name: "GB_GreenspaceSite.shp"
+    location: "data/raw_inputs"
+
+  national_trust:
+    source: "Always Open, National Trust Open Data, Accessed 21/11/2023"
+    description: "A shapefile containing the open access National Trust properties in the UK"
+    url: "https://open-data-national-trust.hub.arcgis.com/datasets/3511d41489ae442c877db40698b3b0c9_0/explore?location=52.827003%2C-2.103324%2C6.81"
+    file_name: "NT_Land_Always_Open.shp"
+    location: "data/raw_inputs"
+
+  rivers:
+    source: "OS Data Hub, OS Open Rivers (downloaded 20/11/2023)"
+    description: "A shapefile containing all rivers in the UK in EPSG:3857 Web Mercator projection"
+    url: "https://api.os.uk/downloads/v1/products/OpenRivers/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
+    file_name: "WatercourseLink.shp"
+    location: "data/raw_inputs"
+
+  roads:
+    source: "OS Data Hub, OS Open Roads (downloaded 20/11/2023)"
+    description: "A series of shapefiles containing all roads in the UK in EPSG:3857 Web Mercator projection"
+    url: "https://api.os.uk/downloads/v1/products/OpenRoads/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
+    file_name: "XX_RoadLink.shp"
+    location: "data/raw_inputs/roads"
+
+  postcodes:
+    source: "OS Data Hub, Code-Point-Open (downloaded 21/11/2023)"
+    description: "A series of csv files containing all the coordinates of the centre of UK postcodes in EPSG:27700 projection"
+    url: "https://api.os.uk/downloads/v1/products/CodePointOpen/downloads?area=GB&format=CSV&redirect"
+    file_name: "xx.csv"
+    location: "data/raw_inputs/postcodes"
+
+  schools:
+    source: "Gov.UK school info download portal, Establishment fields CSV"
+    description: "A csv file containing school location and rating information"
+    url: "https://get-information-schools.service.gov.uk/Downloads"
+    file_name: "edubasealldata20231121.csv"
+    location: "data/raw_inputs"
+
+  coastline:
+    source: "OS Data Hub, Boundary Line (downloaded 21/11/2023)"
+    description: "A shapefile containing boundary lines that is dissolved to create a polygon of the coastal outline of the UK"
+    url: "https://api.os.uk/downloads/v1/products/BoundaryLine/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
+    file_name: ""
+    location: "data/inputs"
+
+downloaded_inputs:
 
   house_prices:
     source: "House Price per Square Metre in England and Wales, 1995-2021. Colchester, Essex: UK Data Service"
     description: "CSV file holding prices and house information from transacted sales"
     url: "https://reshare.ukdataservice.ac.uk/855033/2/tranall_link_01042021.zip"
-    zip_folder: "data/inputs/house_prices.zip"
-    location: "data/inputs"
+    zip_folder: "data/raw_inputs/house_prices.zip"
     file_name: "tranall_link_01042021.csv"
-    col_names:
-    
+    location: "data/raw_inputs"
+  
+  ttwas:
+    source: "OpenDataNI from data.gov.uk/dataset"
+    description: "Shapefile containing travel to work areas as polygons"
+    url: "https://admin.opendatani.gov.uk/dataset/30aced27-4b4e-4f28-a14b-e982a0fccb65/resource/8898e4ce-0999-4c59-a21b-7fcc340d3b1a/download/ttwa2011_shp.zip"
+    zip_folder: "data/raw_inputs/ttwas.zip"
+    file_name: "TTWA2011.shp"
+    location: "data/raw_inputs"
 
-  # air_quality:
-  #   source: 
-  #   description:
-  #   url:
-  #   zip_folder:
-  #   file_name: ""
-  #   location: "data/inputs"
-  #   col_names:
+  railway_stations:
+    source: "Edinburgh DataShare, Pope (2017)"
+    description: "A shapefile containing the location of all UK train stations"
+    url: "https://datashare.ed.ac.uk/download/DS_10283_2423.zip"
+    zip_folder: "data/raw_inputs/railway_stations.zip"
+    file_name: "Railway_Station.shp"
+    location: "data/raw_inputs"
