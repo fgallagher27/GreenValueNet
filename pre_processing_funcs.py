@@ -16,6 +16,7 @@ from shapely.geometry import Point
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+from data_load_funcs import load_data_catalogue
 
 cwd = Path.cwd()
 
@@ -131,11 +132,39 @@ def make_coastline():
     )
 
 
+def match_ons_postcode():
+    """
+    This function maps ONS codes used in GLUD to postcodes.
+    It used the ON postcode directory file to map
+    """
+    print("Mapping postcodes to census wards...")
+    catalogue = load_data_catalogue()
+    postcode_path = (
+        cwd / 
+        "data" /
+        catalogue['inputs']['postcodes']['location'] /
+        catalogue['inputs']['postcodes']['file_name']
+    )
+
+    mapping_path = (
+        cwd / 
+        "data" /
+        catalogue['inputs']['glud_mapping']['location'] /
+        catalogue['inputs']['glud_mapping']['file_name']
+    ) 
+    postcodes = gpd.read_file(postcode_path)
+    mapping = pd.read_csv(mapping_path)
+    mapping = mapping.loc[:, ['pcd', 'statsward']]
+    mapped = pd.merge(postcodes, mapping, left_on = "postcode", right_on = "pcd", how="left").dropna()
+    mapped.to_csv(cwd / "data" / "processed_data" / "mapped_postcodes.shp")
+
+
 if __name__ == "__main__":
     # TODO move this to a yml file to hold parameters
     processed_files_lib = {
         "postcodes_c.shp": concat_postcodes,
         "roads_c.shp": concat_roads,
-        "coastline.shp": make_coastline
+        "coastline.shp": make_coastline,
+        "mapped_postcodes.shp": match_ons_postcode
     }
     pre_processing(processed_files_lib)

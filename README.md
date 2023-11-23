@@ -27,11 +27,6 @@ For licensing reasons I am not able to incorporate the downloading of this datas
 The national parks shapefile was downloaded from the Natural England Open Data Publication, a Defra group ArcGIS Online Organisation. It contains all the national parks of England as polygons.  
 *https://naturalengland-defra.opendata.arcgis.com/datasets/national-parks-england/explore*
 
-**Green Spaces**
-
-This shapefile contains information on a range of greenspaces in urban and rural areas e.g. playing fields, allotments etc as polygons. It was obtained from the OS OpenData downloads page.  
-*https://osdatahub.os.uk/downloads/open/OpenGreenspace*
-
 **National Trust**
 
 The National Trust shapefile was downloaded from the National Trust Open Data site, with the Always open version being selected for use as a better measure of natural amendity than ticketed estates. These areas are stored as polygons.  
@@ -56,6 +51,19 @@ School location and ratings data was downloaded from the UK government data down
 
 A UK coastline polygon is constructed from boundary lines polygons downloaded from the OS data hub.  
 *https://osdatahub.os.uk/downloads/open/BoundaryLine*
+
+**Ward characteristics**
+
+The Generalised Land Use Database is used to get information at the ward level on:
+- Domestic building density
+- Non domestic building density
+- Garden density
+- Greenspace density
+- Water density (i.e. proportion of land that is river/lake)
+- Path density
+
+`ONS_code` is matched to postcode using ONS UPRN Directory (May 2018) *Office for National Statistics licensed under the Open Government Licence v.3.0*  
+*https://www.gov.uk/government/statistics/generalised-land-use-database-statistics-for-england-2005*
 
 **House Prices**
 
