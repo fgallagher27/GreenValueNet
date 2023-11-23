@@ -30,26 +30,19 @@ raw_inputs:
     file_name: "NT_Land_Always_Open.shp"
     location: "data/raw_inputs"
 
-  rivers:
-    source: "OS Data Hub, OS Open Rivers (downloaded 20/11/2023)"
-    description: "A shapefile containing all rivers in the UK in EPSG:3857 Web Mercator projection"
-    url: "https://api.os.uk/downloads/v1/products/OpenRivers/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
-    file_name: "WatercourseLink.shp"
-    location: "data/raw_inputs"
-
   roads:
     source: "OS Data Hub, OS Open Roads (downloaded 20/11/2023)"
-    description: "A series of shapefiles containing all roads in the UK in EPSG:3857 Web Mercator projection"
+    description: "A series of shapefiles containing all roads in the UK in EPSG:3857 Web Mercator projection combined into a single file in preprocessing"
     url: "https://api.os.uk/downloads/v1/products/OpenRoads/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
-    file_name: "XX_RoadLink.shp"
-    location: "data/raw_inputs/roads"
+    file_name: "roads_c.shp"
+    location: "data/processed_inputs"
 
   postcodes:
     source: "OS Data Hub, Code-Point-Open (downloaded 21/11/2023)"
-    description: "A series of csv files containing all the coordinates of the centre of UK postcodes in EPSG:27700 projection"
+    description: "A series of csv files containing all the coordinates of the centre of UK postcodes in EPSG:27700 projection is pre-processed into a shp file"
     url: "https://api.os.uk/downloads/v1/products/CodePointOpen/downloads?area=GB&format=CSV&redirect"
-    file_name: "xx.csv"
-    location: "data/raw_inputs/postcodes"
+    file_name: "postcodes_c.shp"
+    location: "data/processed_inputs"
 
   schools:
     source: "Gov.UK school info download portal, Establishment fields CSV"
@@ -62,7 +55,7 @@ raw_inputs:
     source: "OS Data Hub, Boundary Line (downloaded 21/11/2023)"
     description: "A shapefile containing boundary lines that is dissolved to create a polygon of the coastal outline of the UK"
     url: "https://api.os.uk/downloads/v1/products/BoundaryLine/downloads?area=GB&format=ESRI%C2%AE+Shapefile&redirect"
-    file_name: ""
+    file_name: "coastline./shp"
     location: "data/inputs"
 
 downloaded_inputs:

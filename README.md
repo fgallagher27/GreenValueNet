@@ -37,15 +37,15 @@ This shapefile contains information on a range of greenspaces in urban and rural
 The National Trust shapefile was downloaded from the National Trust Open Data site, with the Always open version being selected for use as a better measure of natural amendity than ticketed estates. These areas are stored as polygons.  
 *https://open-data-national-trust.hub.arcgis.com/datasets/3511d41489ae442c877db40698b3b0c9_0/explore?location=52.824441%2C-2.103324%2C6.78 (Downloaded: 21/11/2023)*
 
-**Rivers**
-
-The Rivers shapefile is from the OS Data Hub and covers all waterways in the UK as linestrings.  
-*https://osdatahub.os.uk/downloads/open/OpenRivers*
-
 **Roads**
 
 The roads shapefiles are from the OS Data Hub and covers all raods in the UK. The shapefile is split into 100km^2 tiles.
 *https://osdatahub.os.uk/downloads/open/OpenRoads*
+
+**Postcodes**
+
+The coordinates of the centre of each postcode are extracted from the OS Data Hub across 120 csv files in in EPSG:27700 projection.
+*https://osdatahub.os.uk/downloads/open/CodePointOpen*
 
 **Schools**
 

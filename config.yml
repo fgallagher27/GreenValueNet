@@ -1,0 +1,25 @@
+# parameters.yml
+
+default:
+
+  pre_processing:
+  # TODO get func to be interpreted as a function in python
+    postcodes:
+      file_name: 'postcodes_c.shp'
+      func: concat_postcodes
+
+    roads:
+      file_name: 'roads_c.shp'
+      func: concat_roads
+    
+    coastline:
+      file_name: 'coastline.shp'
+      func: make_coastline
+
+
+
+  house_prices:
+    processed_file: 'house_prices_c.csv'
+
+  spatial_attributes:
+    processed_file: 'spatial_attributes_c.csv'
