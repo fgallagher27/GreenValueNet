@@ -3,6 +3,23 @@
 GreenValueNet is my attempt to use a neural network to value environmental ammenities using a hedonic pricing approach.  
 This approach draws on the hedonic pricing model outlined in *'The Amenity Value of English Nature: A Hedonic Price Approach' (Gibbons, Mourato & Resende; 2013) (DOI: 10.1007/s10640-013-9664-9).*
 
+## Model
+
+### Structure
+
+### Potential improvements
+
+**Improvements to the NN architecture**
+
+**Improvements to the dataset**
+
+The dataset could be further modified to explain more of the variation in house prices and therefore hopefully improve the accuracy of the model. Computational power acts as a major constraint here. Potential modifications include:
+- Widening the dataset from England to UK given many of the inputs cover regions of the UK besides England
+- The house price dataset contained lots of variables relating to energy efficiency but indicators such as garden (or garden size) could be particularly relevant for valuing natural ammenities
+- Using school catchment areas rather than striaght line distances for closest school, and including school quality explicitly (i.e. latest Ofsted inspection) as a measure of school quality
+
+## Dataset
+
 ### Data Sources and processing
 
 The input downloads can be found in `data_catalogue.yml` with more details below. Not all datasets can be included in the `download_data()` function so have been downloaded seperately. All are publicly available and links have been included below. These should be placed into a folder with filepath `data/raw_inputs` in order to run the model. If you want the processed data directly please get in touch. The following datasets need to be downloaded seperately:
@@ -79,5 +96,3 @@ TTWAs are areas where >75% of the economically active population work in the are
 
 This shapefile contains the locations of all train stations in the UK as points.  
 *Pope, Addy. (2017). GB Railways and stations. University of Edinburgh. https://doi.org/10.7488/ds/1773.*
-
-

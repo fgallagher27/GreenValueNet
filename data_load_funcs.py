@@ -18,8 +18,10 @@ import geopandas as gpd
 import zipfile
 import yaml
 import requests
+from pathlib import Path
 from typing import List, Union
 
+cwd = Path.cwd()
 
 ### Download files ----
 
@@ -156,3 +158,24 @@ def get_params(model_run = 'default'):
         raise ValueError(f"No configuration found for model_run {model_run}")
     
     return params
+
+
+def process_spatial_dict(params):
+    """
+    This function processes the folder and file
+    names in the spatial dictionary in the config
+    file into system agnostic filepaths to be
+    used in the creation of the spatial
+    attributes file
+    """
+    spatial_dict = params['spatial_dict']
+
+    new = {}
+    for key, values in spatial_dict.items():
+        path = cwd / "data" / values['folder'] / values['filename']
+        
+        # Update the dictionary with the new file path
+        new[key] = path
+
+    return new
+

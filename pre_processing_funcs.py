@@ -6,6 +6,7 @@ It contains the following functions:
     * concat_postcodes
     * concat_roads
     * make_coastline
+    * match_ons_postcode
 
 """
 
@@ -155,8 +156,11 @@ def match_ons_postcode():
     postcodes = gpd.read_file(postcode_path)
     mapping = pd.read_csv(mapping_path)
     mapping = mapping.loc[:, ['pcd', 'statsward']]
-    mapped = pd.merge(postcodes, mapping, left_on = "postcode", right_on = "pcd", how="left").dropna()
-    mapped.to_csv(cwd / "data" / "processed_data" / "mapped_postcodes.shp")
+    mapped = postcodes.merge(mapping, left_on = "postcode", right_on = "pcd", how="left").dropna()
+    mapped.to_file(
+        cwd / "data" / "processed_inputs" / "mapped_postcodes.shp",
+        driver="ESRI Shapefile"
+    )
 
 
 if __name__ == "__main__":

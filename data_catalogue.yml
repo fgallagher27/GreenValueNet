@@ -88,3 +88,14 @@ inputs:
     url: "https://geoportal.statistics.gov.uk/datasets/ons-postcode-directory-november-2021-1/about"
     file_name: "ONSPD_NOV_2021_UK.csv"
     location: "raw_inputs"
+
+  inflation:
+    source: "ONS RPI: Housing(Jan 1987=100)"
+    description: "Retail Price Index over time for housing"
+    url: "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/chbf/mm23"
+    file_name: 'inflation.csv'
+    location: 'raw_inputs'
+
+interim_files:
+   dataset:
+    file_name: "dataset.csv"
