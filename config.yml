@@ -1,0 +1,63 @@
+# parameters.yml
+
+default:
+
+  chunksize: 100000
+
+  spatial_dict:
+    coastline:
+      folder: "processed_inputs"
+      file: "coastline.shp"
+
+    prim_school:
+      folder: "processed_inputs"
+      file: "primary_school.shp"
+
+    sec_school:
+      folder: "processed_inputs"
+      file: "secondary_school.shp"
+    
+    roads:
+      folder: "processed_inputs"
+      file: "roads_c.shp"
+
+    nat_park:
+      folder: "raw_inputs"
+      file: "National_Parks_(England)___Natural_England.shp"
+
+    nat_trust:
+      folder: "raw_inputs"
+      file: "NT_Land_Always_Open.shp"
+    
+    rail_station:
+      folder: "raw_inputs"
+      file: "Railway_Stations.shp"
+    
+    ttwa:
+      folder: "raw_inputs"
+      file: "TTWA2011.shp"
+  
+
+
+  pre_processing:
+  # TODO get func to be interpreted as a function in python
+    postcodes:
+      file_name: 'postcodes_c.shp'
+      func: concat_postcodes
+
+    roads:
+      file_name: 'roads_c.shp'
+      func: concat_roads
+    
+    coastline:
+      file_name: 'coastline.shp'
+      func: make_coastline
+
+    mapped_postcodes:
+      processed_file: 'mapped_postcodes.shp'
+
+  house_prices:
+    processed_file: 'house_prices_c.csv'
+
+  spatial_attributes:
+    processed_file: 'spatial_attributes_c.csv'
