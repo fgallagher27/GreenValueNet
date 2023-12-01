@@ -4,6 +4,32 @@ default:
 
   chunksize: 100000
 
+  target_grid: 1000
+
+  land_use_legend:
+    1: "broad_lf_wdlnd"
+    2: "conif_wdlnd"
+    3: "arable"
+    4: "imp_grasslnd"
+    5: "semi_nat_grasslnd"
+    6: "calcereous_grassland"
+    7: "calcereous_grassland"
+    8: "calcereous_grassland"
+    9: "mountain_hth_bog"
+    10: "mountain_hth_bog"
+    11: "mountain_hth_bog"
+    12: "mountain_hth_bog"
+    13: "saltwater"
+    14: "freshwater"
+    15: "coastal"
+    16: "coastal"
+    17: "coastal"
+    18: "coastal"
+    19: "coastal"
+    20: "built_up"
+    21: "built_up"
+    255: "other"
+
   spatial_dict:
     coastline:
       folder: "processed_inputs"
@@ -53,11 +79,14 @@ default:
       file_name: 'coastline.shp'
       func: make_coastline
 
-    mapped_postcodes:
-      processed_file: 'mapped_postcodes.shp'
+  mapped_postcodes:
+    processed_file: 'mapped_postcodes.shp'
 
   house_prices:
     processed_file: 'house_prices_c.csv'
 
   spatial_attributes:
     processed_file: 'spatial_attributes_c.csv'
+  
+  land_use:
+    processed_file: 'land_use_c.csv'

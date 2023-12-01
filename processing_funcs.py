@@ -13,6 +13,7 @@ import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+import rasterio
 from pathlib import Path
 from typing import List, Union
 from shapely.ops import nearest_points
@@ -144,10 +145,13 @@ def process_spatial_attr(catalogue: dict, params: dict):
         spatial_attributes = spatial_attributes.loc[:, keep]
         spatial_attributes = spatial_attributes.merge(ward_chars, on='', how='left')
 
+        lu_props = process_lu_rast()
+
         spatial_attributes.to_file(
             clean_path,
             driver = "ESRI Shapefile"
         )
+
 
     return spatial_attributes
 
@@ -231,6 +235,33 @@ def process_school_data(catalogue: dict):
     )
 
     return primary_df, secondary_df
+
+def process_lu_rast(catalogue: dict, pararms:dict):
+
+    # now process land use raster
+    lu_rast = get_file_path(catalogue, 'inputs', 'land_cover')
+    clean_path = cwd / "data" / "processed_inputs" / params['land_use']['processed_file']
+    if os.path.exists(clean_path):
+        lu_props = pd.read_file(clean_path)
+    else:
+        # TODO update and move to Params
+        legend = {1: 'Urban', 2: 'Forest', 3: 'Water', 4: 'Agriculture', 5: '...'}
+        target_grid_size = params['target_grid']
+
+        with rasterio.open(lu_rast) as src:
+            land_use = src.read(1)
+            pix_w, pix_h = src.transofrm.a, src.transform.e
+        pixel_dim = {
+            'height': pix_h,
+            'width': pix_w
+        }
+        
+        lu_props = calc_rast_props(land_use, legend, target_grid_size, pixel_dim)
+    
+    return lu_props_out
+
+
+
     
 
 def nearest_point(point, spatial_index, other_gdf):
@@ -262,6 +293,33 @@ def calc_dist_to_nearest(points_gdf, feature_dict):
         points_gdf[f'{feature}_dist'] = points_gdf.geometry.distance(nearest_points)
 
 
+def calc_rast_props(raster_data, legend, target_grid_size, pixel_dim: dict):
+    """
+    This function takes in a raster as a numpy array and uses the legend and pixel_dim
+    to calculate the proportion of each pixel in target grid size that is each legend
+    category
+    """
+    pixel_w, pixel_h = pixel_dim['width'], pixel_dim['height']
+    target_grid_pixels = int(target_grid_size / pixel_w)
+    # Reshape the raster data into non-overlapping target grid cells
+    reshaped_data = raster_data.reshape(
+        raster_data.shape[0] // target_grid_pixels, target_grid_pixels,
+        raster_data.shape[1] // target_grid_pixels, target_grid_pixels
+    )
+
+    # Count the occurrences of each land use category in each grid cell
+    counts = np.zeros((len(legend), reshaped_data.shape[0], reshaped_data.shape[2]), dtype=int)
+    for value, category in legend.items():
+        counts[value - 1] = (reshaped_data == value).sum(axis=(1, 3))
+
+ 
+    total_pixels = counts.sum(axis=0)
+    proportions_grid_cell = counts / total_pixels
+    proportions = proportions_grid_cell.sum(axis=(1, 2))
+    total_cells = reshaped_data.shape[0] * reshaped_data.shape[2]
+    proportions /= total_cells
+
+    return proportions
 
 def calc_share(values, totals):
     """
