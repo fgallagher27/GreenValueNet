@@ -23,7 +23,7 @@ def process_data(catalogue: dict, params: dict):
     """
     This function processes the input data
     """
-    path = cwd / "data" / "interim_files" / catalogue['interim_files']['dataset']
+    path = cwd / "data" / "interim_files" / get_file_path(catalogue, "interim_files", "dataset")
     if os.path.exists(path):
         print("Processed dataset already exists.\nLoading exisitng dataset...")
         df = pd.read_csv(path)
