@@ -6,6 +6,12 @@ The following functions are defined:
     * process_data
     * process_housing_data
     * process_spatial_attr
+    * process_glud
+    * process_school_data
+    * calc_dist_to_nearest
+    * calc_share
+    * normalise_values
+    * integer_encoding
     
 """
 
