@@ -110,6 +110,7 @@ def process_housing_data(catalogue: dict, params: dict):
             hp = hp.loc[:, keep]
             
             for col in ['propertytype', 'oldnew', 'duration', 'construction_age_band']:
+                # TODO replace with one-hot encoding
                 hp[col] = integer_encoding(hp[col])
             chunked_list.append(hp)
 
