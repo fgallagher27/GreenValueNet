@@ -17,7 +17,7 @@ from shapely.geometry import Point
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
-from data_load_funcs import load_data_catalogue
+from data_load_funcs import load_data_catalogue, get_file_path
 
 cwd = Path.cwd()
 
@@ -143,15 +143,13 @@ def match_ons_postcode():
     postcode_path = (
         cwd / 
         "data" /
-        catalogue['inputs']['postcodes']['location'] /
-        catalogue['inputs']['postcodes']['file_name']
+        get_file_path(catalogue, 'inputs', 'postcodes')
     )
 
     mapping_path = (
         cwd / 
         "data" /
-        catalogue['inputs']['glud_mapping']['location'] /
-        catalogue['inputs']['glud_mapping']['file_name']
+        get_file_path(catalogue, 'inputs', 'glud_mapping')
     ) 
     postcodes = gpd.read_file(postcode_path)
     mapping = pd.read_csv(mapping_path)

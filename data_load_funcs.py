@@ -172,7 +172,7 @@ def process_spatial_dict(params):
 
     new = {}
     for key, values in spatial_dict.items():
-        path = cwd / "data" / values['folder'] / values['filename']
+        path = cwd / "data" / values['folder'] / values['file']
         
         # Update the dictionary with the new file path
         new[key] = path

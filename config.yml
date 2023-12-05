@@ -2,8 +2,11 @@
 
 default:
 
+  # chunk up house price data set to read in due to size
   chunksize: 100000
 
+  # outline each spatial attribute and the associated file
+  # used to calculate distance from postcode to attribute
   spatial_dict:
     coastline:
       folder: "processed_inputs"
@@ -29,14 +32,19 @@ default:
       folder: "raw_inputs"
       file: "NT_Land_Always_Open.shp"
     
-    rail_station:
-      folder: "raw_inputs"
-      file: "Railway_Stations.shp"
-    
     ttwa:
       folder: "raw_inputs"
-      file: "TTWA2011.shp"
+      file: "TTWA_Dec_2001_UGCB_in_the_UK.shp"
   
+  # column names in ML dataset which are not normalised
+  non_norm_cols:
+    - 'transactionid'
+    - 'ln_price'
+    - 'postcode'
+    - 'propertype'
+    - 'oldnew'
+    - 'duration'
+    - 'construction_age_band'
 
 
   pre_processing:
@@ -56,6 +64,7 @@ default:
     mapped_postcodes:
       processed_file: 'mapped_postcodes.shp'
 
+  # used to check if processing has already happened
   house_prices:
     processed_file: 'house_prices_c.csv'
 
