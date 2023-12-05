@@ -22,7 +22,7 @@ The dataset could be further modified to explain more of the variation in house 
 
 ### Data Sources and processing
 
-The input downloads can be found in `data_catalogue.yml` with more details below. Not all datasets can be included in the `download_data()` function so have been downloaded seperately. All are publicly available and links have been included below. These should be placed into a folder with filepath `data/raw_inputs` in order to run the model. If you want the processed data directly please get in touch. The following datasets need to be downloaded seperately:
+The input downloads can be found in `data_catalogue.yml` with more details below. Not all datasets can be included in the `download_data()` function so have been downloaded seperately. All are publicly available and links have been included below. These should be placed into a folder with filepath `data/raw_inputs` in order to run the model. If you want the processed data directly please get in touch. Any use of interim files should comply with the license agreements of all datasets below. The following datasets need to be downloaded seperately:
 - Land cover
 - National Parks
 - Green spaces
@@ -61,7 +61,7 @@ The coordinates of the centre of each postcode are extracted from the OS Data Hu
 
 **Schools**
 
-School location and ratings data was downloaded from the UK government data download portal page
+School location and ratings data was downloaded from the UK government data download portal page. This file should be saved with UTF-8 encoding.
 *https://get-information-schools.service.gov.uk/Downloads*
 
 **Coastline**
@@ -89,10 +89,10 @@ House price data was obtained from the UK Data Service House Price per sq metre 
 
 **Travel To Work Areas (TTWAs)**
 
-TTWAs are areas where >75% of the economically active population work in the area, and 75% of the working population live in the area. This shapefile contains TTWAs as polygons and is obtained from the UK Gov Data portal  
-*https://www.data.gov.uk/dataset/30aced27-4b4e-4f28-a14b-e982a0fccb65/travel-to-work-areas-2011*
+TTWAs are areas where >75% of the economically active population work in the area, and 75% of the working population live in the area. This shapefile contains TTWAs from the ONS geography geoportal.
+*https://geoportal.statistics.gov.uk/datasets/ons::ttwa-dec-2001-generalised-clipped-boundaries-in-the-uk/explore*
 
 **Train Stations**
 
-This shapefile contains the locations of all train stations in the UK as points.  
+This shapefile contains the locations of all train stations in the UK as points. Due to difficutlies assigning the missing CRS, this variable has been excluded for now
 *Pope, Addy. (2017). GB Railways and stations. University of Edinburgh. https://doi.org/10.7488/ds/1773.*

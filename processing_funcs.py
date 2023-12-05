@@ -15,7 +15,6 @@ import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 from typing import List, Union
-from shapely.ops import nearest_points
 from data_load_funcs import get_params, get_file_path, load_data_catalogue, process_spatial_dict
 
 cwd = Path.cwd()
@@ -23,7 +22,10 @@ def process_data(catalogue: dict, params: dict):
     """
     This function processes the input data
     """
-    path = cwd / "data" / "interim_files" / get_file_path(catalogue, "interim_files", "dataset")
+
+    folder = cwd / "data" / "interim_files"
+    path = folder / catalogue['interim_files']['dataset']['file_name']
+
     if os.path.exists(path):
         print("Processed dataset already exists.\nLoading exisitng dataset...")
         df = pd.read_csv(path)
@@ -33,11 +35,10 @@ def process_data(catalogue: dict, params: dict):
         spa = process_spatial_attr(catalogue, params)
         df = pd.merge(hp, spa, on='postcode', how='left')
 
-        folder = cwd / "data" / "interim_files"
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        df.to_csv(folder / "dataset.csv")
+        df.to_csv(path)
 
     return df
 
@@ -51,10 +52,12 @@ def process_housing_data(catalogue: dict, params: dict):
     - drops excess columns
     - saves the cleaned file to processed_inputs
     """
+
     clean_file_path = cwd / "data" / "processed_inputs" / params['house_prices']['processed_file']
     raw_file_path = cwd / "data" / get_file_path(catalogue, "inputs", "house_prices")
 
     if os.path.exists(clean_file_path):
+        print("Processed house price file exists.\nLoading data...")
         hp_full = pd.read_csv(clean_file_path)
     
     elif os.path.exists(raw_file_path):
@@ -124,30 +127,40 @@ def process_spatial_attr(catalogue: dict, params: dict):
     """
 
     # check if processed file exists
-    clean_path = cwd / "data" / "processed_inputs" / params['spatial_attributes']['processed_file']
+    file_name = params['spatial_attributes']['processed_file']
+    clean_path = cwd / "data" / "processed_inputs" / file_name
     if os.path.exists(clean_path):
+        print("Processed spatial attributes file exists.\nLoading data...")
         spatial_attributes = gpd.read_file(clean_path)
     else:
+        print("Creating spatial attributes dataset...")
         spatial_mapping = gpd.read_file(
-            cwd / "data" / "processed_data" / "mapped_postcodes.shp"
+            cwd / "data" / "processed_inputs" / "mapped_postcodes.shp"
         )
 
         ward_chars = process_glud(catalogue)
-
         process_school_data(catalogue)
-
         spatial_dict = process_spatial_dict(params)
+
         # Apply function over all shapefiles in the feature dict
-        spatial_attributes = calc_dist_to_nearest(spatial_mapping, spatial_dict)
-
-        keep = []
-        spatial_attributes = spatial_attributes.loc[:, keep]
-        spatial_attributes = spatial_attributes.merge(ward_chars, on='', how='left')
-
-        spatial_attributes.to_file(
-            clean_path,
-            driver = "ESRI Shapefile"
+        spatial_attributes = calc_dist_to_nearest(
+            spatial_mapping,
+            spatial_dict
         )
+
+        spatial_attributes = spatial_attributes.merge(
+            ward_chars,
+            left_on='statsward',
+            right_on = 'ward_code',
+            how='left'
+        )
+
+        spatial_attributes = spatial_attributes.drop(
+            ['pcd', 'ward_code', 'statsward', 'geometry'],
+            axis=1
+        )
+
+        spatial_attributes.to_csv(clean_path)
 
     return spatial_attributes
 
@@ -159,6 +172,7 @@ def process_glud(catalogue: dict):
     It drops excess columns, calculates variable as a share of ward area
     and normalises values
     """
+
     print("Processing Generalised Land Use Database...")
     glud_vars = catalogue['inputs']['ward_characteristics']
     glud_folder = glud_vars['location']
@@ -190,7 +204,7 @@ def process_glud(catalogue: dict):
     glud.drop(value_cols + ['total_area'], axis=1, inplace=True)
 
     glud.to_csv(
-        cwd / "data" / "processed_data" / "ward_chars.csv",
+        cwd / "data" / "processed_inputs" / "ward_chars.csv",
         index=False
     )
 
@@ -202,6 +216,7 @@ def process_school_data(catalogue: dict):
     on postcode. Schools are also split into different
     dataframes based on primary vs secondary school
     """
+
     print("Processing school locations...")
     path = get_file_path(catalogue, 'inputs', 'schools')
     schools_raw = pd.read_csv(cwd / "data" / path)
@@ -209,16 +224,17 @@ def process_school_data(catalogue: dict):
     schools.rename(columns={
         'EstablishmentNumber': 'school_id',
         'Postcode': 'postcode',
-        'PhaseOfEducation (name)': 'school_type'}, inplace=True)
-    schools = schools[schools['school_type'].isin(['Primary', 'Secondary'])]
+        'PhaseOfEducation (name)': 'sch_type'}, inplace=True)
+    schools = schools[schools['sch_type'].isin(['Primary', 'Secondary'])]
 
     # now convert to a shapefile
     postcodes_path = get_file_path(catalogue, 'inputs', 'postcodes')
-    postcodes = gpd.read_file(postcodes_path)
-    schools_shp = schools.merge(postcodes, on='postcode', how='left')
-
-    primary_df = schools_shp[schools_shp['school_type'] == 'Primary']
-    secondary_df = schools_shp[schools_shp['school_type'] == 'Secondary']
+    postcodes = gpd.read_file(cwd / "data" / postcodes_path)
+    schools = schools.merge(postcodes, on='postcode', how='left')
+    schools_shp = gpd.GeoDataFrame(schools, geometry='geometry')
+    
+    primary_df = schools_shp[schools_shp['sch_type'] == 'Primary']
+    secondary_df = schools_shp[schools_shp['sch_type'] == 'Secondary']
 
     primary_df.to_file(
         cwd / "data" / "processed_inputs" / "primary_school.shp",
@@ -231,17 +247,6 @@ def process_school_data(catalogue: dict):
     )
 
     return primary_df, secondary_df
-    
-
-def nearest_point(point, spatial_index, other_gdf):
-    """
-    This function takes a point and a spatial indx from
-    other_gdf and calculates the nearest point in other_gdf to point"""
-    possible_matches_index = list(spatial_index.intersection(point.bounds))
-    possible_matches = other_gdf.iloc[possible_matches_index]
-    nearest_geom = nearest_points(point, possible_matches.unary_union)[1]
-    nearest = possible_matches.geometry == nearest_geom
-    return possible_matches[nearest]
 
 
 def calc_dist_to_nearest(points_gdf, feature_dict):
@@ -249,24 +254,21 @@ def calc_dist_to_nearest(points_gdf, feature_dict):
     This function reads in the feature shapefile and conducts
     the nearest point analysis on all points in points_gdf
     """
+
     for feature, feature_path in feature_dict.items():
+        print(f"Caclulating distance to nearest {feature}")
         feature_gdf = gpd.read_file(feature_path)
+        feature_gdf = feature_gdf.to_crs(points_gdf.crs)
+        # calculate distance and convert from m to km
+        points_gdf.loc[:, f'{feature}_dist'] = points_gdf.distance(feature_gdf.unary_union) / 1_000
 
-        # check for matching CRS
-        if feature_gdf.crs != points_gdf.crs:
-            feature_gdf = feature_gdf.to_crs(points_gdf.crs)
-        feature_spatial_index = feature_gdf.sindex
-
-        nearest_points = points_gdf.geometry.apply(lambda x: nearest_point(x, feature_spatial_index, feature_gdf))
-        nearest_points = nearest_points.geometry
-        points_gdf[f'{feature}_dist'] = points_gdf.geometry.distance(nearest_points)
-
-
+    return points_gdf
 
 def calc_share(values, totals):
     """
     This function divides a vector of values by a vector of totals to get the proportion.
     """
+
     return values / totals
 
 
@@ -280,6 +282,7 @@ def normalise_values(numbers):
     Returns:
         list: list of numbers normalised between 0 and 1
     """
+
     min_val = min(numbers)
     max_val = max(numbers)
 
@@ -293,6 +296,7 @@ def integer_encoding(strings):
     """
     Encodes a list of strings as integer values based on unique values
     """
+
     encoded = strings.factorize()[0]
     return encoded
 

@@ -69,9 +69,8 @@ inputs:
   ttwas:
     source: "OpenDataNI from data.gov.uk/dataset"
     description: "Shapefile containing travel to work areas as polygons"
-    url: "https://admin.opendatani.gov.uk/dataset/30aced27-4b4e-4f28-a14b-e982a0fccb65/resource/8898e4ce-0999-4c59-a21b-7fcc340d3b1a/download/ttwa2011_shp.zip"
-    zip_folder: "data/raw_inputs/ttwas.zip"
-    file_name: "TTWA2011.shp"
+    url: "https://geoportal.statistics.gov.uk/datasets/ons::ttwa-dec-2001-ultra-generalised-clipped-boundaries-in-the-uk/explore?location=53.039686%2C-11.319864%2C6.11"
+    file_name: "TTWA_Dec_2001_UGCB_in_the_UK.shp"
     location: "raw_inputs"
 
   railway_stations:
