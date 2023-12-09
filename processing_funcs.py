@@ -44,7 +44,7 @@ def process_data(catalogue: dict, params: dict):
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        df.to_csv(path)
+        df.to_csv(path, index=False)
 
     return df
 

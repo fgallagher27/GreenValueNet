@@ -5,6 +5,10 @@ default:
   # chunk up house price data set to read in due to size
   chunksize: 100000
 
+  # set size of dev and test set
+  dev_size: 10000
+  test_size: 10000
+
   # outline each spatial attribute and the associated file
   # used to calculate distance from postcode to attribute
   spatial_dict:
