@@ -9,6 +9,14 @@ default:
   dev_size: 10000
   test_size: 10000
 
+  # output variable column name
+  target_var: 'ln_price'
+  
+  # and drop id cols
+  cols_out:
+    - 'transactionid'
+    - 'postcode'
+
   # outline each spatial attribute and the associated file
   # used to calculate distance from postcode to attribute
   spatial_dict:
