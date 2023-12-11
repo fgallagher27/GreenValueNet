@@ -24,7 +24,7 @@ from typing import List, Union
 from data_load_funcs import get_params, get_file_path, load_data_catalogue, process_spatial_dict
 
 cwd = Path.cwd()
-def process_data(catalogue: dict, params: dict):
+def process_data(catalogue: dict, params: dict) -> pd.DataFrame:
     """
     This function processes the input data
     """
