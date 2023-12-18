@@ -7,8 +7,7 @@ import numpy as np
 import tensorflow as tf
 from typing import List, Tuple
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
 
 def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.ndarray]:
@@ -60,7 +59,11 @@ def split_to_test_dev_train(
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
 
-def random_forest_reg(x_train,x_dev,y_train,y_dev, tuning, tuning_params: dict = None) -> tuple():
+def random_forest_reg(
+        x_train: np.ndarray,
+        y_train: np.ndarray,
+        tuning: bool,
+        tuning_params: dict = None) -> tuple():
     """
     This function creates the random forest regression
     model used as a baseline model.
@@ -86,17 +89,20 @@ def random_forest_reg(x_train,x_dev,y_train,y_dev, tuning, tuning_params: dict =
 
     else:
         rfr = RandomForestRegressor().fit(x_train, y_train)
-        
-    rfr_pred = rfr.predict(x_dev)
-    mse = mean_squared_error(y_dev, rfr_pred)
-    rmse = mse ** 0.5
-
-    metrics = {
-        'mse': mse,
-        'rmse': rmse
-    }
     
-    return rfr, rfr_pred, metrics
+    return rfr
+
+
+def boosted_grad_reg(x_train, y_train):
+    """
+    This function trains a boosted regression model
+    to be used in model benchmarking
+    """
+
+    reg = GradientBoostingRegressor()
+    xgb = reg.fit(x_train, y_train)
+
+    return xgb
 
 
 def baseline_nn(x_train, y_train, batch_size):
@@ -123,7 +129,4 @@ def baseline_nn(x_train, y_train, batch_size):
 
     model.fit(x_train, y_train, epochs=15, batch_size = batch_size)
 
-    pred = None
-    metrics = None
-
-    return model, pred, metrics
+    return model
