@@ -113,21 +113,31 @@ def process_housing_data(catalogue: dict, params: dict):
             ]
             hp.columns = [item.lower() for item in hp.columns]
             hp = hp.loc[:, keep]
-            
-            for col in ['propertytype', 'oldnew', 'duration', 'construction_age_band']:
+
+            encode_list = ['propertytype', 'oldnew', 'duration', 'construction_age_band']
+            mapping = {key: None for key in encode_list}
+            for col in encode_list:
                 # TODO replace with one-hot encoding
-                hp[col] = integer_encoding(hp[col], ['', 'NO DATA!', 'INVALID!'])
+                hp[col], mapping[col] = integer_encoding(
+                    hp[col],
+                    exclude_strings=['', 'NO DATA!', 'INVALID!']
+                )
+
             chunked_list.append(hp)
 
         hp_full = pd.concat(chunked_list, ignore_index=True)
 
         if params['impute_missing_vals']:
             # now we do imputation on missing numeric values using nearest neighbours
-            hp_full = pd.DataFrame(
-                KNNImputer.fit_transform(hp_full),
-                columns=hp_full.columns)
+            cols_to_impute = hp_full.select_dtypes(include=['int', 'float']).columns[hp_full.select_dtypes(include=['int', 'float']).isna().any()]
+            imputer = KNNImputer(weights='distance')
+            hp_full[cols_to_impute] = imputer.fit_transform(hp_full[cols_to_impute])
         
         hp_full.to_csv(clean_file_path, index=False)
+        pd.DataFrame(mapping).to_csv(
+            cwd / "data" / "interim_files" / "encoding_mappings.csv",
+            index=False
+        )
     
     else:
         raise FileNotFoundError("House price data specified in data catalogue and parameters not found")
@@ -318,8 +328,8 @@ def integer_encoding(strings, exclude_strings=[]):
     """
 
     strings = strings.apply(lambda x: x if x not in exclude_strings else np.nan)
-    encoded = strings.factorize()[0]
-    return encoded
+    encoded, mapping = strings.factorize()
+    return encoded, mapping
 
 
 if __name__ == "__main__":
