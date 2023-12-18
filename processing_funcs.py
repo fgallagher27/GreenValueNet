@@ -128,6 +128,8 @@ def process_housing_data(catalogue: dict, params: dict):
         hp_full = pd.concat(chunked_list, ignore_index=True)
 
         if params['impute_missing_vals']:
+
+            print("Imputing missing values using nearest neighbours")
             # now we do imputation on missing numeric values using nearest neighbours
             cols_to_impute = hp_full.select_dtypes(include=['int', 'float']).columns[hp_full.select_dtypes(include=['int', 'float']).isna().any()]
             imputer = KNNImputer(weights='distance')
