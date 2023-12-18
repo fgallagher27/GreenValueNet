@@ -84,7 +84,7 @@ def concat_roads():
     road_folder = cwd / "data" / "raw_inputs" / "roads"
 
     road_files = [f for f in os.listdir(road_folder) if f.endswith('RoadLink.shp')]
-    main_roads = ['A road', 'Motorway']
+    main_roads = ['A Road', 'Motorway']
     cols = ['identifier', 'class', 'geometry']
 
     def clean_road_subset(file_name, folder, main_roads, cols):
