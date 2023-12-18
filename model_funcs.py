@@ -4,13 +4,14 @@ This script contains the functions to run the baseline and deep neural network m
 
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 from typing import List, Tuple
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 
-def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple(np.ndarray, np.ndarray):
+def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.ndarray]:
     """
     This function splits the dataset into an input array and an output array
     Each row corresponds to an example, and each column of x to a feature.
@@ -21,6 +22,7 @@ def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple(np.ndarray, np.
     y = df[params['target_var']].to_numpy()
 
     return x,y
+
 
 def split_to_test_dev_train(
         x: np.ndarray,
@@ -52,6 +54,8 @@ def split_to_test_dev_train(
         y_temp, 
         test_size=(test_size / test_size + dev_size)
     )
+
+    # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
 
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
@@ -93,3 +97,33 @@ def random_forest_reg(x_train,x_dev,y_train,y_dev, tuning, tuning_params: dict =
     }
     
     return rfr, rfr_pred, metrics
+
+
+def baseline_nn(x_train, y_train, batch_size):
+    """
+    This function creates the baseline single layer neural network model
+    """
+    # TODO make this flexible so that n_layers becomes a hyperparameter 
+    # and can be iterated over as an argument in baseline_nn()
+    mean_squared_error = tf.keras.metrics.mean_squared_error
+    # this normalises over the last axis?
+    normalizer = tf.keras.layers.Normalization(axis=-1)
+    normalizer.adapt(x_train)
+
+    model = tf.keras.Sequential([
+        normalizer,
+        tf.keras.layers.Dense(1, activation='linear')
+    ])
+
+    model.compile(
+        optimizer='adam',
+        loss=tf.keras.losses.MeanSquaredError(from_logits=True),
+        metrics=['mean_squared_error']
+    )
+
+    model.fit(x_train, y_train, epochs=15, batch_size = batch_size)
+
+    pred = None
+    metrics = None
+
+    return model, pred, metrics
