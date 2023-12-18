@@ -19,6 +19,7 @@ import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+from sklearn.impute import KNNImputer
 from pathlib import Path
 from typing import List, Union
 from data_load_funcs import get_params, get_file_path, load_data_catalogue, process_spatial_dict
@@ -97,6 +98,10 @@ def process_housing_data(catalogue: dict, params: dict):
             hp['ln_price'] = np.log(hp['price'] / hp['index'])
 
             # convert potential energy efficiency to proportion of potential
+            # where potential < current, overwrite current with potential
+            # ensures current as proportion of potential is capped at 1
+            en_err_mask = hp['CURRENT_ENERGY_EFFICIENCY'] > hp['POTENTIAL_ENERGY_EFFICIENCY']
+            hp.loc[en_err_mask, 'CURRENT_ENERGY_EFFICIENCY'] = hp.loc[en_err_mask, 'POTENTIAL_ENERGY_EFFICIENCY']
             hp['POTENTIAL_ENERGY_EFFICIENCY'] = hp['CURRENT_ENERGY_EFFICIENCY'] / hp['POTENTIAL_ENERGY_EFFICIENCY']
 
             # TODO move to parameter config
@@ -111,11 +116,17 @@ def process_housing_data(catalogue: dict, params: dict):
             
             for col in ['propertytype', 'oldnew', 'duration', 'construction_age_band']:
                 # TODO replace with one-hot encoding
-                hp[col] = integer_encoding(hp[col])
+                hp[col] = integer_encoding(hp[col], ['', 'NO DATA!', 'INVALID!'])
             chunked_list.append(hp)
 
         hp_full = pd.concat(chunked_list, ignore_index=True)
 
+        if params['impute_missing_vals']:
+            # now we do imputation on missing numeric values using nearest neighbours
+            hp_full = pd.DataFrame(
+                KNNImputer.fit_transform(hp_full),
+                columns=hp_full.columns)
+        
         hp_full.to_csv(clean_file_path, index=False)
     
     else:
@@ -299,11 +310,14 @@ def normalise_values(numbers):
     else:
         return [(x - min_val) / (max_val - min_val) for x in numbers]
     
-def integer_encoding(strings):
+def integer_encoding(strings, exclude_strings=[]):
     """
     Encodes a list of strings as integer values based on unique values
+    exclude_strings is a list that can contain any values that should
+    not be encoded and will be replaced with NaN
     """
 
+    strings = strings.apply(lambda x: x if x not in exclude_strings else np.nan)
     encoded = strings.factorize()[0]
     return encoded
 

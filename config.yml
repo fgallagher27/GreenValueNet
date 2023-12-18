@@ -43,6 +43,11 @@ default:
         - 10
 
   # Data processing
+
+
+  # impute missing values
+  impute_missing_vals: True
+  
   # chunk up house price data set to read in due to size
   chunksize: 100000
 
