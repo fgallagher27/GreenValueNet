@@ -6,6 +6,12 @@ The following functions are defined:
     * process_data
     * process_housing_data
     * process_spatial_attr
+    * process_glud
+    * process_school_data
+    * calc_dist_to_nearest
+    * calc_share
+    * normalise_values
+    * integer_encoding
     
 """
 
@@ -13,12 +19,13 @@ import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+from sklearn.impute import KNNImputer
 from pathlib import Path
 from typing import List, Union
 from data_load_funcs import get_params, get_file_path, load_data_catalogue, process_spatial_dict
 
 cwd = Path.cwd()
-def process_data(catalogue: dict, params: dict):
+def process_data(catalogue: dict, params: dict) -> pd.DataFrame:
     """
     This function processes the input data
     """
@@ -38,7 +45,7 @@ def process_data(catalogue: dict, params: dict):
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-        df.to_csv(path)
+        df.to_csv(path, index=False)
 
     return df
 
@@ -91,6 +98,10 @@ def process_housing_data(catalogue: dict, params: dict):
             hp['ln_price'] = np.log(hp['price'] / hp['index'])
 
             # convert potential energy efficiency to proportion of potential
+            # where potential < current, overwrite current with potential
+            # ensures current as proportion of potential is capped at 1
+            en_err_mask = hp['CURRENT_ENERGY_EFFICIENCY'] > hp['POTENTIAL_ENERGY_EFFICIENCY']
+            hp.loc[en_err_mask, 'CURRENT_ENERGY_EFFICIENCY'] = hp.loc[en_err_mask, 'POTENTIAL_ENERGY_EFFICIENCY']
             hp['POTENTIAL_ENERGY_EFFICIENCY'] = hp['CURRENT_ENERGY_EFFICIENCY'] / hp['POTENTIAL_ENERGY_EFFICIENCY']
 
             # TODO move to parameter config
@@ -102,14 +113,33 @@ def process_housing_data(catalogue: dict, params: dict):
             ]
             hp.columns = [item.lower() for item in hp.columns]
             hp = hp.loc[:, keep]
-            
-            for col in ['propertytype', 'oldnew', 'duration', 'construction_age_band']:
-                hp[col] = integer_encoding(hp[col])
+
+            encode_list = ['propertytype', 'oldnew', 'duration', 'construction_age_band']
+            mapping = {key: None for key in encode_list}
+            for col in encode_list:
+                # TODO replace with one-hot encoding
+                hp[col], mapping[col] = integer_encoding(
+                    hp[col],
+                    exclude_strings=['', 'NO DATA!', 'INVALID!']
+                )
+
             chunked_list.append(hp)
 
         hp_full = pd.concat(chunked_list, ignore_index=True)
 
+        if params['impute_missing_vals']:
+
+            print("Imputing missing values using nearest neighbours")
+            # now we do imputation on missing numeric values using nearest neighbours
+            cols_to_impute = hp_full.select_dtypes(include=['int', 'float']).columns[hp_full.select_dtypes(include=['int', 'float']).isna().any()]
+            imputer = KNNImputer(weights='distance')
+            hp_full[cols_to_impute] = imputer.fit_transform(hp_full[cols_to_impute])
+        
         hp_full.to_csv(clean_file_path, index=False)
+        pd.DataFrame(mapping).to_csv(
+            cwd / "data" / "interim_files" / "encoding_mappings.csv",
+            index=False
+        )
     
     else:
         raise FileNotFoundError("House price data specified in data catalogue and parameters not found")
@@ -292,13 +322,16 @@ def normalise_values(numbers):
     else:
         return [(x - min_val) / (max_val - min_val) for x in numbers]
     
-def integer_encoding(strings):
+def integer_encoding(strings, exclude_strings=[]):
     """
     Encodes a list of strings as integer values based on unique values
+    exclude_strings is a list that can contain any values that should
+    not be encoded and will be replaced with NaN
     """
 
-    encoded = strings.factorize()[0]
-    return encoded
+    strings = strings.apply(lambda x: x if x not in exclude_strings else np.nan)
+    encoded, mapping = strings.factorize()
+    return encoded, mapping
 
 
 if __name__ == "__main__":

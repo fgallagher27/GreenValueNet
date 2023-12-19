@@ -2,6 +2,47 @@
 
 default:
 
+
+  # Model Parameters
+
+  # set size of dev and test set
+  dev_size: 10000
+  test_size: 10000
+
+  # output variable column name
+  target_var: 'ln_price'
+  
+  # and drop id cols
+  cols_out:
+    - 'transactionid'
+    - 'postcode'
+
+  tuning_dict:
+    grid:
+      n_estimators:
+        - 200
+        - 400
+        - 600
+      max_features:
+        - 'sqrt'
+        - 'log2'
+      max_depth:
+        - 3
+        - 5
+      min_samples_leaf:
+        - 2
+        - 4
+      min_samples_split:
+        - 2
+        - 5
+        - 10
+
+  # Data processing
+
+
+  # impute missing values
+  impute_missing_vals: True
+  
   # chunk up house price data set to read in due to size
   chunksize: 100000
 
@@ -45,7 +86,6 @@ default:
     - 'oldnew'
     - 'duration'
     - 'construction_age_band'
-
 
   pre_processing:
   # TODO get func to be interpreted as a function in python
