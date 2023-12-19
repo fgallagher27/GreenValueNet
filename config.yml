@@ -27,7 +27,6 @@ default:
       max_features:
         - 'sqrt'
         - 'log2'
-        - 'auto'
       max_depth:
         - 3
         - 4
