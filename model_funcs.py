@@ -79,11 +79,9 @@ def random_forest_reg(
     if tuning:
         assert tuning_params is not None, "if 'tuning=True, tuning_params is required"
 
-        grid = tuning_params['grid']
-
         tuning = GridSearchCV(
             estimator=RandomForestRegressor(),
-            param_grid=grid
+            param_grid=tuning_params
         )
 
         rfr = tuning.fit(x_train, y_train)
