@@ -8,6 +8,7 @@ import tensorflow as tf
 from typing import List, Tuple
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from tensorflow.keras import layers, models
 
 
 def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.ndarray]:
@@ -51,7 +52,7 @@ def split_to_test_dev_train(
     x_dev, x_test, y_dev, y_test = train_test_split(
         x_temp,
         y_temp, 
-        test_size=(test_size / test_size + dev_size)
+        test_size=(test_size / (test_size + dev_size))
     )
 
     # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
@@ -63,7 +64,7 @@ def random_forest_reg(
         x_train: np.ndarray,
         y_train: np.ndarray,
         tuning: bool,
-        tuning_params: dict = None) -> tuple():
+        tuning_params: dict = None) -> RandomForestRegressor:
     """
     This function creates the random forest regression
     model used as a baseline model.
@@ -93,7 +94,7 @@ def random_forest_reg(
     return rfr
 
 
-def boosted_grad_reg(x_train, y_train):
+def boosted_grad_reg(x_train, y_train) -> GradientBoostingRegressor:
     """
     This function trains a boosted regression model
     to be used in model benchmarking
@@ -105,28 +106,47 @@ def boosted_grad_reg(x_train, y_train):
     return xgb
 
 
-def baseline_nn(x_train, y_train, batch_size):
+def neural_net(
+        x_train: tf.tensor,
+        y_train: tf.tensor,
+        n_layers: int = 1,
+        learning_rate: float = 0.01,
+        batch_size: int = 32,
+        hidden_activation: str = 'relu',
+        output_activation: str = 'linear',
+        loss: str = 'mean_squared_error'
+    ) -> tf.keras.Model:
     """
-    This function creates the baseline single layer neural network model
+    This function creates a neural network model with n_layers hidden layers
+    and an output layer using the activations specified.
     """
-    # TODO make this flexible so that n_layers becomes a hyperparameter 
-    # and can be iterated over as an argument in baseline_nn()
-    mean_squared_error = tf.keras.metrics.mean_squared_error
-    # this normalises over the last axis?
-    normalizer = tf.keras.layers.Normalization(axis=-1)
-    normalizer.adapt(x_train)
 
-    model = tf.keras.Sequential([
-        normalizer,
-        tf.keras.layers.Dense(1, activation='linear')
-    ])
-
+    model = models.Sequential()
+    model.add(layers.InputLayer(input_shape=x_train.shape[1:]))
+    
+    # Adding hidden layers
+    for _ in range(n_layers):
+        model.add(layers.Dense(128, activation=hidden_activation))
+    # Adding output layer
+    model.add(layers.Dense(units=1, activation=output_activation))
+    
     model.compile(
-        optimizer='adam',
-        loss=tf.keras.losses.MeanSquaredError(from_logits=True),
-        metrics=['mean_squared_error']
+        optimizer=tf._optimizers.Adam(learning_rate = learning_rate),
+        loss=loss,
+        metrics=[loss]
     )
-
-    model.fit(x_train, y_train, epochs=15, batch_size = batch_size)
+    model.fit(x_train, y_train, epochs=5, batch_size=batch_size) 
 
     return model
+
+
+def generate_pred_metric(model, metric: function, x_dev, y_dev):
+    """
+    This function takes model which has a method predict
+    and generates predictions and accuracy according to a 
+    metric function that takes in two arrays of numbers
+    """
+    pred = model.predict(x_dev)
+    metric_calc = metric(y_dev, pred)
+
+    return pred, metric_calc
