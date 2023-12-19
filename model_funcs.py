@@ -64,7 +64,8 @@ def random_forest_reg(
         x_train: np.ndarray,
         y_train: np.ndarray,
         tuning: bool,
-        tuning_params: dict = None) -> RandomForestRegressor:
+        tuning_params: dict = None,
+        **kwargs) -> RandomForestRegressor:
     """
     This function creates the random forest regression
     model used as a baseline model.
@@ -80,25 +81,25 @@ def random_forest_reg(
         assert tuning_params is not None, "if 'tuning=True, tuning_params is required"
 
         tuning = GridSearchCV(
-            estimator=RandomForestRegressor(),
+            estimator=RandomForestRegressor(**kwargs),
             param_grid=tuning_params
         )
 
         rfr = tuning.fit(x_train, y_train)
 
     else:
-        rfr = RandomForestRegressor().fit(x_train, y_train)
+        rfr = RandomForestRegressor(**kwargs).fit(x_train, y_train)
     
     return rfr
 
 
-def boosted_grad_reg(x_train, y_train) -> GradientBoostingRegressor:
+def boosted_grad_reg(x_train, y_train, **kwargs) -> GradientBoostingRegressor:
     """
     This function trains a boosted regression model
     to be used in model benchmarking
     """
 
-    reg = GradientBoostingRegressor()
+    reg = GradientBoostingRegressor(**kwargs)
     xgb = reg.fit(x_train, y_train)
 
     return xgb
@@ -114,7 +115,8 @@ def neural_net(
         epochs: int = 50,
         hidden_activation: str = 'relu',
         output_activation: str = 'linear',
-        loss: str = 'mean_squared_error'
+        loss: str = 'mean_squared_error',
+        **kwargs
     ) -> tf.keras.Model:
     """
     This function creates a neural network model with n_layers hidden layers
@@ -135,7 +137,7 @@ def neural_net(
         loss=loss,
         metrics=[loss]
     )
-    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size) 
+    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, **kwargs) 
 
     return model
 
