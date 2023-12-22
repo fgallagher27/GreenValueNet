@@ -41,7 +41,7 @@ default:
 
 
   # impute missing values
-  impute_missing_vals: True
+  impute_missing_vals: False
   
   # chunk up house price data set to read in due to size
   chunksize: 100000
@@ -86,6 +86,14 @@ default:
     - 'oldnew'
     - 'duration'
     - 'construction_age_band'
+
+  derivative_cols:
+    - 'coastline_dist'
+    - 'nat_park_dist'
+    - 'nat_trust_dist'
+    - 'garden_share'
+    - 'greenspace_share'
+    - 'water_share'
 
   pre_processing:
   # TODO get func to be interpreted as a function in python
