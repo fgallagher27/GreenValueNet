@@ -16,6 +16,7 @@ The following functions are defined:
 """
 
 import os
+import csv
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -50,7 +51,7 @@ def process_data(catalogue: dict, params: dict) -> pd.DataFrame:
     return df
 
 
-def process_housing_data(catalogue: dict, params: dict):
+def process_housing_data(catalogue: dict, params: dict) -> pd.DataFrame:
     """
     This function cleans the raw house prices csv. Specifically it:
     - Normalised numerical variables
@@ -126,7 +127,6 @@ def process_housing_data(catalogue: dict, params: dict):
             chunked_list.append(hp)
 
         hp_full = pd.concat(chunked_list, ignore_index=True)
-
         if params['impute_missing_vals']:
 
             print("Imputing missing values using nearest neighbours")
@@ -134,12 +134,18 @@ def process_housing_data(catalogue: dict, params: dict):
             cols_to_impute = hp_full.select_dtypes(include=['int', 'float']).columns[hp_full.select_dtypes(include=['int', 'float']).isna().any()]
             imputer = KNNImputer(weights='distance')
             hp_full[cols_to_impute] = imputer.fit_transform(hp_full[cols_to_impute])
+        else:
+            print("Dropping NA values instead of imputing...")
+            hp_full.dropna(inplace=True)
         
         hp_full.to_csv(clean_file_path, index=False)
-        pd.DataFrame(mapping).to_csv(
-            cwd / "data" / "interim_files" / "encoding_mappings.csv",
-            index=False
-        )
+
+        mapping_path = cwd / "data" / "interim_files" / "encoding_mappings.csv"
+        with open(mapping_path, 'w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(['string', 'integer'])
+            for key, items in mapping.items():
+                csv_writer.writerow([key, ', '.join(items)])
     
     else:
         raise FileNotFoundError("House price data specified in data catalogue and parameters not found")
@@ -147,7 +153,7 @@ def process_housing_data(catalogue: dict, params: dict):
     return hp_full
 
 
-def process_spatial_attr(catalogue: dict, params: dict):
+def process_spatial_attr(catalogue: dict, params: dict) -> pd.DataFrame:
     """
     Takes in spatial characteristics from params and calculates the distance
     to the nearest instance of the characterisitic at the postcode level.
@@ -186,7 +192,7 @@ def process_spatial_attr(catalogue: dict, params: dict):
         )
 
         spatial_attributes = spatial_attributes.drop(
-            ['pcd', 'ward_code', 'statsward', 'geometry'],
+            ['pcds', 'ward_code', 'statsward', 'geometry'],
             axis=1
         )
 
@@ -196,7 +202,7 @@ def process_spatial_attr(catalogue: dict, params: dict):
 
 
 
-def process_glud(catalogue: dict):
+def process_glud(catalogue: dict) -> pd.DataFrame:
     """
     This function processes the data from the Generalised Land Use Database
     It drops excess columns, calculates variable as a share of ward area
@@ -240,7 +246,7 @@ def process_glud(catalogue: dict):
 
     return glud
 
-def process_school_data(catalogue: dict):
+def process_school_data(catalogue: dict) -> pd.DataFrame:
     """
     This function extracts schools as geo points based
     on postcode. Schools are also split into different
@@ -279,7 +285,7 @@ def process_school_data(catalogue: dict):
     return primary_df, secondary_df
 
 
-def calc_dist_to_nearest(points_gdf, feature_dict):
+def calc_dist_to_nearest(points_gdf, feature_dict) -> gpd.GeoDataFrame:
     """
     This function reads in the feature shapefile and conducts
     the nearest point analysis on all points in points_gdf
@@ -294,7 +300,7 @@ def calc_dist_to_nearest(points_gdf, feature_dict):
 
     return points_gdf
 
-def calc_share(values, totals):
+def calc_share(values: List[float], totals: List[float]) -> List[float]:
     """
     This function divides a vector of values by a vector of totals to get the proportion.
     """
@@ -302,27 +308,24 @@ def calc_share(values, totals):
     return values / totals
 
 
-def normalise_values(numbers):
+def normalise_values(numbers: List[float]) -> List[float]:
     """
-    This function takes in a list of numbers and normalises the data to lie between 0 and 1
+    Conducts Z-normalization
 
     Args:
         numbers (list): A list of numbers to normalise.
 
     Returns:
-        list: list of numbers normalised between 0 and 1
+        list: list of numbers normalised around mean 0 with std. 1
     """
+    arr = np.array(numbers)
+    mean = np.mean(arr)
+    std_dev = np.std(arr)
+    normalized_arr = (arr - mean) / std_dev
 
-    min_val = min(numbers)
-    max_val = max(numbers)
-
-    # avoid division by zero if all numbers are the same
-    if min_val == max_val:
-        return [0.0] * len(numbers)
-    else:
-        return [(x - min_val) / (max_val - min_val) for x in numbers]
+    return normalized_arr
     
-def integer_encoding(strings, exclude_strings=[]):
+def integer_encoding(strings: List[str], exclude_strings: List[str] = []) -> tuple[List[str], dict]:
     """
     Encodes a list of strings as integer values based on unique values
     exclude_strings is a list that can contain any values that should

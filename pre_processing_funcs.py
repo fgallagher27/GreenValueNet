@@ -153,8 +153,9 @@ def match_ons_postcode():
     ) 
     postcodes = gpd.read_file(postcode_path)
     mapping = pd.read_csv(mapping_path)
-    mapping = mapping.loc[:, ['pcd', 'statsward']]
-    mapped = postcodes.merge(mapping, left_on = "postcode", right_on = "pcd", how="left").dropna()
+    mapping = mapping.loc[:, ['pcds', 'statsward']]
+    mapped = postcodes.merge(mapping, left_on = "postcode", right_on = "pcds", how="left").dropna()
+    mapped.drop(columns='pcds', inplace=True)
     mapped.to_file(
         cwd / "data" / "processed_inputs" / "mapped_postcodes.shp",
         driver="ESRI Shapefile"
@@ -169,4 +170,3 @@ if __name__ == "__main__":
         "coastline.shp": make_coastline,
         "mapped_postcodes.shp": match_ons_postcode
     }
-    pre_processing(processed_files_lib)

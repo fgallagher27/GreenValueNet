@@ -114,7 +114,7 @@ def check_inputs():
 
 ### Data Catalogue ----
 
-def load_data_catalogue():
+def load_data_catalogue() -> dict:
     """
     Loads data catalogue
     """
@@ -124,7 +124,7 @@ def load_data_catalogue():
     return data_catalogue
 
 
-def get_file_path(catalogue: dict, level_1: str, level_2: str):
+def get_file_path(catalogue: dict, level_1: str, level_2: str) -> str:
     """
     Extracts the file path from the data catalogue
 
@@ -144,7 +144,7 @@ def get_file_path(catalogue: dict, level_1: str, level_2: str):
 
 ### Parameters ----
 
-def get_params(model_run = 'default'):
+def get_params(model_run: str = 'default') -> dict:
     """
     Loads config.yml containing parameters
     """
@@ -160,7 +160,7 @@ def get_params(model_run = 'default'):
     return params
 
 
-def process_spatial_dict(params):
+def process_spatial_dict(params: dict) -> dict:
     """
     This function processes the folder and file
     names in the spatial dictionary in the config

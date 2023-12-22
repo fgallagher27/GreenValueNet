@@ -1,0 +1,8 @@
+﻿date,model,hyperparameters,dev mse,notes
+20/12/2023,Random Forest,defualt,0.1985,
+20/12/2023,XGBoost,default,0.12,
+20/12/2023,Neural network,"layers = 1, learning_rate = 0.01, epochs=69",no convergence,mse fluctuated between 0.2 and 0.3 with upward trend
+20/12/2023,Neural network,"layers = 5, learning_rate = 0.01, epochs = 69",0.1856,"training and dev set error pretty close, XGBoost results mean we are underfitting here"
+21/12/2023,Neural network,"layers = 1, learning_rate = 0.001, epochs=69",,
+21/12/2023,Random Forest,Grid search,,
+21/12/2023,Neural network,"layers = 10, learning_rate = 0.05, epochs=100",,
