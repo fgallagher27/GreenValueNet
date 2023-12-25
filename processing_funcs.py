@@ -192,8 +192,7 @@ def process_spatial_attr(catalogue: dict, params: dict) -> pd.DataFrame:
         )
 
         spatial_attributes = spatial_attributes.drop(
-            ['pcds', 'ward_code', 'statsward', 'geometry'],
-            axis=1
+            columns = ['ward_code', 'statsward', 'geometry']
         )
 
         spatial_attributes.to_csv(clean_path)
