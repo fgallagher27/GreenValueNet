@@ -58,7 +58,8 @@ The deep neural network is set up as below. The latest version of models are sav
 Through various iterations of hyperparameter tuning and model modifications, the hyperparamter values are:
 
 - Number of layers $ \mathcal{l} = 10 $
-- Number of hidden units $ n_x = 24 $
+- Number of input features $ n_x = 21 $
+- Number of hidden units $ n_l = 24 $
 - Learning rate $ \alpha = 0.01 $
 - Number of  $ epochs = 69 $
 
