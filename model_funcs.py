@@ -133,11 +133,14 @@ def neural_net(
     
     # Adding hidden layers
     for _ in range(n_layers):
-        model.add(layers.Dense(
-            n_hidden_units,
-            activation=hidden_activation,
-            kernel_initializer=initializers.he_normal(),
-            trainable=True))
+        model.add(
+            layers.Dense(
+                n_hidden_units,
+                kernel_initializer=initializers.he_normal(),
+                trainable=True)
+            )
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation(hidden_activation))
     
     # Adding output layer
     model.add(layers.Dense(
