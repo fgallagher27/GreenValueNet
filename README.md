@@ -53,7 +53,7 @@ A variety of regression models were considered as benchmark models. As the regre
 
 The deep neural network is set up as below. The latest version of models are saved in [`outputs/models`](#outputs/models) and a log of model iterations `model_log.csv` is available in [`outputs`](#outputs).
 
-**TODO** Use images from draw.io
+![Labelled diagram of model structure with input features, and then l layers of a dense layer, batch normalisation layer and ReLU activation before a linear output layer](outputs/images/model_structure_1.png)
 
 Through various iterations of hyperparameter tuning and model modifications, the hyperparamter values are:
 
