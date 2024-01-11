@@ -19,7 +19,9 @@ Hedonic pricing values environmental attributes using property sale data. Contro
 
 To my knowledge, few attempts to use hedonic pricing to value environmental attributes at a more national level exist, one example being Gibbons, Mourato and Resende (2013). Most existing approaches also use bayesian or traditional regression models, whereas my approach leverages machine learning techniques including neural networks.
 
-Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics. $$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $$ 
+Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics.
+
+![A partial derivative formula of ln price with respect to feature x](outputs/images/partial_diff_equation.png)
 
 where:
 - $V(x)$ is value of feature $x$
@@ -36,7 +38,9 @@ The dataset is constructed by combining property sale data by full postcode with
 
 ### Loss function
 
-A mean squared error (MSE) loss function was used for the regression problem. Not only is this a common approach in machine learning regression problems, but the MSE loss function is more sensitive to outliers than an absolute error loss function. Given the plausibility of extreme values at the upper end of the house prices, the MSE loss was used to penalise these observations without completely disregarding the information they contain. THe model therefore aims to minimise the following: $$ L(y, \hat{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 $$
+A mean squared error (MSE) loss function was used for the regression problem. Not only is this a common approach in machine learning regression problems, but the MSE loss function is more sensitive to outliers than an absolute error loss function. Given the plausibility of extreme values at the upper end of the house prices, the MSE loss was used to penalise these observations without completely disregarding the information they contain. THe model therefore aims to minimise the following:
+
+![The mean squared error formula](outputs/images/mse_equation.png)
 
 where:
 - $L(y, \hat{y})$ is the mean squared error (or loss)
@@ -56,11 +60,11 @@ The deep neural network is set up as below. The latest version of models are sav
 
 Through various iterations of hyperparameter tuning and model modifications, the hyperparamter values are:
 
-- Number of layers $ \mathcal{l} = 10 $
-- Number of input features $ n_x = 21 $
-- Number of hidden units $ n_l = 24 $
-- Learning rate $ \alpha = 0.01 $
-- Number of  $ epochs = 69 $
+- Number of layers $\mathcal{l} = 10$
+- Number of input features $n_x = 21$
+- Number of hidden units $n_l = 24$
+- Learning rate $\alpha = 0.01$
+- Number of  $epochs = 69$
 
 Batch normalisation was also introduced during the iteration process, and he initialisation was used for relu layers, with glorot normal initialisation for the output layers to combat the issue of vanishing gradients that was experienced in early model runs.
 
