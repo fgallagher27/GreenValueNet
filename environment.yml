@@ -1,0 +1,17 @@
+name: greenvalue-net
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - gitpython
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - tensorflow
+  - geopandas
+  - shapely
+  - matplotlib
+  - joblib
+  - requests
+  - black
