@@ -30,7 +30,7 @@ Yoiu can then navigate to [`GreenValueNet.ipynb`](GreenValueNet.ipynb), and befo
 ## Introduction
 Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmnetal economics for localised features such as urban air quality.  
 
-To my knowledge, few attempts to use hedonic pricing to value environmental attributes at a more national level exist, one example being Gibbons, Mourato and Resende (2013). Most existing approaches also use bayesian or traditional regression models, whereas my approach leverages machine learning techniques including neural networks.
+To my knowledge, few attempts to use hedonic pricing to value environmental attributes at a national level exist, one example being Gibbons, Mourato and Resende (2013). Most existing approaches also use bayesian or traditional regression models, whereas my approach leverages machine learning techniques including neural networks.
 
 Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics.
 
@@ -51,7 +51,7 @@ The dataset is constructed by combining property sale data by full postcode with
 
 ### Loss function
 
-A mean squared error (MSE) loss function was used for the regression problem. Not only is this a common approach in machine learning regression problems, but the MSE loss function is more sensitive to outliers than an absolute error loss function. Given the plausibility of extreme values at the upper end of the house prices, the MSE loss was used to penalise these observations without completely disregarding the information they contain. THe model therefore aims to minimise the following:
+A mean squared error (MSE) loss function was used for the regression problem. The MSE loss function is more sensitive to outliers than an absolute error loss function and is a common choice for this kind of problem. Given the plausibility of extreme values at the upper end of house prices, the MSE loss was used to penalise these observations without ignoring the information they contain. THe model therefore minimises the following:
 
 $$ L(y, \hat{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 $$
 
@@ -63,7 +63,7 @@ where:
 
 ### Baseline models
 
-A variety of regression models were considered as benchmark models. As the regression problem was complex, a linear model was unlikely to be informative and given the ease of deploying machine learning models using packages such as `sci-kit learn`, a `RandomForestRegressor` and `GradientBoostingRegressor` were used for baseline models. In both cases hyperparamter tuning was conducted. The gradient boosting regressor performed better against the mean squared error (MSE) metric and the random forest also triggered memory issues when ran locally.
+A variety of regression models were considered as benchmark models. As the regression problem was complex, a linear model was unlikely to be informative so machine learning regressions from `scikit-learn` were used. The gradient boosting regressor performed better against the mean squared error (MSE) metric and the random forest also triggered memory issues when ran locally.
 
 ### Structure [pending]
 
