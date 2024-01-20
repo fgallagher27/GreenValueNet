@@ -34,7 +34,7 @@ To my knowledge, few attempts to use hedonic pricing to value environmental attr
 
 Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics.
 
-$$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $$
+$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $
 
 where:
 - $V(x)$ is value of feature $x$
