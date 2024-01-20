@@ -89,7 +89,7 @@ Batch normalisation was also introduced during the iteration process, and he nor
 
 ### Model Performance [pending]
 
-**TODO** plot the model accuracy
+![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_242001.png)
 
 ## Potential improvements
 
