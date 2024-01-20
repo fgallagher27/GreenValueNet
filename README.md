@@ -21,7 +21,7 @@ To my knowledge, few attempts to use hedonic pricing to value environmental attr
 
 Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics.
 
-![A partial derivative formula of ln price with respect to feature x](outputs/images/partial_diff_equation.png)
+$$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $$
 
 where:
 - $V(x)$ is value of feature $x$
@@ -40,7 +40,7 @@ The dataset is constructed by combining property sale data by full postcode with
 
 A mean squared error (MSE) loss function was used for the regression problem. Not only is this a common approach in machine learning regression problems, but the MSE loss function is more sensitive to outliers than an absolute error loss function. Given the plausibility of extreme values at the upper end of the house prices, the MSE loss was used to penalise these observations without completely disregarding the information they contain. THe model therefore aims to minimise the following:
 
-![The mean squared error formula](outputs/images/mse_equation.png)
+$$ L(y, \hat{y}) = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 $$
 
 where:
 - $L(y, \hat{y})$ is the mean squared error (or loss)
