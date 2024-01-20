@@ -34,7 +34,7 @@ To my knowledge, few attempts to use hedonic pricing to value environmental attr
 
 Having formulated a model that uses property and local characteristics to predict house prices, partial derivatives can be used to construct marginal valuation curves for various housing characteristics.
 
-$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $
+$$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \ldots, x_f $$
 
 where:
 - $V(x)$ is value of feature $x$
@@ -99,6 +99,8 @@ One of the main limitations in model improvement has been local memory and proce
 - **Increasing computational power**
   - Sites such as Google colab offer free GPU credits, so this could be investigated to increase computing power
   - This would enable further hyperparameter tuning of the random forest and gradient boosting baselines, but would also allow a fuller randomised hyperparameter search for the neural network. 
+- **Allowing number of hidden units to vary between layers**
+  - This would help the model learn more complex features and patterns, but may induce a tendency to overfit to the training set.
 - **Use of alternative packages to pandas**
   - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 
