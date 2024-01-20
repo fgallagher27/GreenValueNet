@@ -1,6 +1,7 @@
 # :deciduous_tree: GreenValueNet :ocean:
 GreenValueNet is my attempt to use machine learning to value environmental ammenities using hedonic pricing. A deep neural network can outperform gradient boosting and random forest regressions in terms of mean squared error, and enables automatic calculation of gradients used to estimate the value of open space and other environmental ammenities. This approach draws on the hedonic pricing model outlined by [Gibbons, Mourato and Resende (2013)](https://link.springer.com/article/10.1007/s10640-013-9664-9).
 ## Table of Contents
+- [Set up](#Set-up)
 - [Introduction](#introduction)
 - [Dataset](#dataset)
 - [Model](#model)
@@ -13,6 +14,18 @@ GreenValueNet is my attempt to use machine learning to value environmental ammen
 - [Potential improvements](#potential-improvements)
   - [Model improvements](#model-improvements)
   - [Dataset improvements](#dataset-improvements)
+
+## Set up
+To run [`GreenValueNet.ipynb`](GreenValueNet.ipynb) you can use the [`environment.yml`](environment.yml) to set up the virtual environment `greenvalue-net`. This will require a version of `conda` (or alternatively `miniconda` or `mamba`). I used [`Miniforge`](https://github.com/conda-forge/miniforge#download), a lightweight installer for `conda` and `mamba` but the use of other installers is also fine. 
+
+Once you have your preferred version installed, you can verify installation and set up the environment by opening a terminal in the root directory of the project and running the following:
+```
+conda --version
+conda env create -f environment.yml
+conda activate greenvalue-net
+```
+
+Yoiu can then navigate to [`GreenValueNet.ipynb`](GreenValueNet.ipynb), and before executing cells you will be prompted to select a kernel. You should select the `greenvalue-net` kernel which will have the necessary version of python and relevant packages installed to run the notebook.
 
 ## Introduction
 Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmnetal economics for localised features such as urban air quality.  
