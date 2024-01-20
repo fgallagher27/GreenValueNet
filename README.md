@@ -25,7 +25,7 @@ $$ V(x) = \frac{\partial \ln(\text{price})}{\partial x} \text{ for } x_1, x_2, \
 
 where:
 - $V(x)$ is value of feature $x$
-- $\ln(price)$ is the natural logarithim of price
+- $\ln(price)$ is the natural logarithm of price
 - $f$ is the number of environmetal features
 
 As well as sketching these functions, I follow the literature in evaluating these functions at the median house price to get a numerical estimate for the valuation, and report in the results section.
@@ -58,15 +58,15 @@ The deep neural network is set up as below. The latest version of models are sav
 
 ![Labelled diagram of model structure with input features, and then l layers of a dense layer, batch normalisation layer and ReLU activation before a linear output layer](outputs/images/model_structure_1.png)
 
-Through various iterations of hyperparameter tuning and model modifications, the hyperparamter values are:
+Through various iterations of hyperparameter tuning and model modifications, optimal performance was achieved with the following set of hyperparameters:
 
 - Number of layers $\mathcal{l} = 10$
 - Number of input features $n_x = 21$
 - Number of hidden units $n_l = 24$
 - Learning rate $\alpha = 0.01$
-- Number of  $epochs = 69$
+- Number of $epochs = 69$
 
-Batch normalisation was also introduced during the iteration process, and he initialisation was used for relu layers, with glorot normal initialisation for the output layers to combat the issue of vanishing gradients that was experienced in early model runs.
+Batch normalisation was also introduced during the iteration process, and he normal initialisation was used for relu layers, with glorot normal initialisation for the output layers to combat the issue of vanishing gradients that was experienced in early model runs.
 
 ## Results
 
@@ -78,7 +78,7 @@ Batch normalisation was also introduced during the iteration process, and he ini
 
 **TODO** plot the model accuracy
 
-## Potenital improvements
+## Potential improvements
 
 ### Model improvements
 
@@ -86,8 +86,8 @@ One of the main limitations in model improvement has been local memory and proce
 - **Increasing computational power**
   - Sites such as Google colab offer free GPU credits, so this could be investigated to increase computing power
   - This would enable further hyperparameter tuning of the random forest and gradient boosting baselines, but would also allow a fuller randomised hyperparameter search for the neural network. 
-- **Allowing number of units to vary between layers**
-  - For simplicity, so far only network structures where the number of units in each layer is constant across all hidden layers. This could be relaxed to allow for a more complex model.
+- **Use of alternative packages to pandas**
+  - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 
 ### Dataset improvements
 
