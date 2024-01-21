@@ -6,11 +6,13 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from pathlib import Path
 from typing import List, Tuple, Union
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
 
+cwd = Path.cwd()
 
 def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -171,7 +173,7 @@ def generate_pred_metric(model, metric, x_dev, y_dev):
     return pred, metric_calc
 
 
-def generate_plot(nn_dict: dict, baseline_dict: dict):
+def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: str = ''):
     """
     This function plots the loss of the baseline models
     and neural networks over epochs
@@ -191,6 +193,9 @@ def generate_plot(nn_dict: dict, baseline_dict: dict):
     plt.ylabel('Mean Squared Error (MSE)')
     plt.title('Comparison of performance of models')
     plt.legend()
+    if save:
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3])
+        plt.close()
     plt.show()
 
 
