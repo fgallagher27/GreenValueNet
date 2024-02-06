@@ -208,7 +208,7 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     plt.title('Comparison of performance of models')
     plt.legend()
     if save:
-        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3])
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
     plt.show()
 
@@ -274,7 +274,7 @@ def plot_partial_grads(
     array and plots each features partial gradient
     curve over the range of points to eval
     """
-    for col, (label,) in enumerate(derivative_index):
+    for col, (label, old_index) in enumerate(derivative_index):
         y_values = gradients[:, col]
         plt.plot(points_to_eval, y_values, label=label)
     plt.xlabel('Change in x_i')
@@ -282,7 +282,7 @@ def plot_partial_grads(
     plt.title('Partial derivative curves for selected features')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
-        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3])
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
     plt.show()
         
