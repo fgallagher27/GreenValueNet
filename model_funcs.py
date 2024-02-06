@@ -2,6 +2,7 @@
 This script contains the functions to run the baseline and deep neural network models
 """
 
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -44,25 +45,41 @@ def split_to_test_dev_train(
     for whether arguments are interpreted as absolute size, or
     proportion of the total dataset
     """
-    if not prop:
-        # convert absolute values to proportions
-        total_obs = len(x)
-        dev_size /= total_obs 
-        test_size /= total_obs
+    arr_path = cwd / 'data'/ 'interim_files' / 'test_dev_train_arr.npz'
+    if os.path.exists(arr_path):
+        arrays = np.load(arr_path)
+        for key in arrays.files:
+            locals()[key] = arrays[key] 
+    else:
+        if not prop:
+            # convert absolute values to proportions
+            total_obs = len(x)
+            dev_size /= total_obs 
+            test_size /= total_obs
 
-    x_train, x_temp, y_train, y_temp = train_test_split(
-        x,
-        y,
-        test_size=(dev_size + test_size)
-    )
+        x_train, x_temp, y_train, y_temp = train_test_split(
+            x,
+            y,
+            test_size=(dev_size + test_size)
+        )
 
-    x_dev, x_test, y_dev, y_test = train_test_split(
-        x_temp,
-        y_temp, 
-        test_size=(test_size / (test_size + dev_size))
-    )
+        x_dev, x_test, y_dev, y_test = train_test_split(
+            x_temp,
+            y_temp, 
+            test_size=(test_size / (test_size + dev_size))
+        )
 
-    # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
+        np.savez(
+            arr_path,
+            x_train=x_train,
+            x_dev=x_dev,
+            x_test=x_test,
+            y_train=y_train,
+            y_dev=y_dev,
+            y_test=y_test
+        )
+
+        # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
 
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
