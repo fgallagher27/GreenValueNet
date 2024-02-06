@@ -65,7 +65,7 @@ where:
 
 A variety of regression models were considered as benchmark models. As the regression problem was complex, a linear model was unlikely to be informative so machine learning regressions from `scikit-learn` were used. The gradient boosting regressor performed better against the mean squared error (MSE) metric and the random forest also triggered memory issues when ran locally.
 
-### Structure [pending]
+### Structure
 
 The deep neural network is set up as below. The latest version of models are saved in [`outputs/models`](outputs/models) and a log of model iterations `model_log.csv` is available in [`outputs`](outputs).
 
@@ -83,11 +83,12 @@ Batch normalisation was also introduced during the iteration process, and he nor
 
 ## Results
 
-### Valuation [pending]
+### Valuation
+The partial derivative curves for selected environmental features are shown below. These curves do not align with the expected trends. Verification and analysis of these trends are ongoing.
 
-**TODO** plot the gradients
+![Line chart showing the gradients of the house price function with respect to specific features for various values of the feature holding all other values at their mean.](outputs/images/partial_grads_240206.png)
 
-### Model Performance [pending]
+### Model Performance
 
 ![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_242001.png)
 

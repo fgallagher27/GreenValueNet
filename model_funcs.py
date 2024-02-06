@@ -2,6 +2,7 @@
 This script contains the functions to run the baseline and deep neural network models
 """
 
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -44,26 +45,39 @@ def split_to_test_dev_train(
     for whether arguments are interpreted as absolute size, or
     proportion of the total dataset
     """
-    if not prop:
-        # convert absolute values to proportions
-        total_obs = len(x)
-        dev_size /= total_obs 
-        test_size /= total_obs
+    arr_path = cwd / 'data'/ 'interim_files' / 'test_dev_train_arr.npz'
+    if os.path.exists(arr_path):
+        arrays = np.load(arr_path)
+        x_train, x_dev, x_test, y_train, y_dev, y_test = arrays.values()
+    else:
+        if not prop:
+            # convert absolute values to proportions
+            total_obs = len(x)
+            dev_size /= total_obs 
+            test_size /= total_obs
 
-    x_train, x_temp, y_train, y_temp = train_test_split(
-        x,
-        y,
-        test_size=(dev_size + test_size)
-    )
+        x_train, x_temp, y_train, y_temp = train_test_split(
+            x,
+            y,
+            test_size=(dev_size + test_size)
+        )
 
-    x_dev, x_test, y_dev, y_test = train_test_split(
-        x_temp,
-        y_temp, 
-        test_size=(test_size / (test_size + dev_size))
-    )
+        x_dev, x_test, y_dev, y_test = train_test_split(
+            x_temp,
+            y_temp, 
+            test_size=(test_size / (test_size + dev_size))
+        )
 
-    # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
-
+        np.savez(
+            arr_path,
+            x_train=x_train,
+            x_dev=x_dev,
+            x_test=x_test,
+            y_train=y_train,
+            y_dev=y_dev,
+            y_test=y_test
+        )
+        # TODO create a toggle that allows sampling based on TimeSeriesSplit() from sklearn
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
 
@@ -194,46 +208,81 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     plt.title('Comparison of performance of models')
     plt.legend()
     if save:
-        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3])
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
     plt.show()
 
 
 def calc_partial_grad(
         model: tf.keras.Model,
-        x_train: np.ndarray,
+        input_values: np.ndarray,
         derivative_index: zip,
         points_to_eval: np.ndarray):
     """
-    This function evaluates the partial derivative 
-    w.r.t specified features in derivative_index.
-    It does so at the feature values specified in
+    This function loops over the derivative index and
+    calculates partial derivative of each feature holding
+    all other variables at their mean. It does so evaluating
+    the partial derivative for x_i equal to each value in 
     points_to_eval.
     """
+    def calc_partial_derivatives(model, x_values):
+        x_tf = tf.constant(x_values, dtype=tf.float32)
 
-    def partial_derivative(model, x_values, feature_index):
-        x_values = tf.constant(x_values, dtype=tf.float32)
         with tf.GradientTape() as tape:
+            tape.watch(x_tf)
+            predictions = model(x_tf)
+            target_var = predictions[0,0]
 
-            prediction = model(x_values)
+        gradients = tape.gradient(target_var, x_tf)
 
-        # Calculate the partial derivative
-        gradients = tape.gradient(prediction, x_values)
-        partial_deriv = gradients[:, feature_index]
+        return gradients.numpy()
 
-        return partial_deriv.numpy()
+    # Initialise empty array to store gradients
+    partial_derivs = np.zeros((len(points_to_eval), input_values.shape[1]))
 
-    # for each feature in gradient calculations
-    derivative_vals = {}
-    x_mean = np.mean(x_train, axis=0)
-    for name, index in zip(*derivative_index):
+    # Loop through each feature
+    keep = []
+    for key, i in derivative_index:
+        keep.append(i-1)
 
-        # Create input features, setting other features to their mean
-        x_values = np.tile(x_mean, (len(points_to_eval), 1))
-        x_values[:, 0] = points_to_eval
+        # Loop over values of x_i to calculate partial derivative
+        for j, n in enumerate(points_to_eval):
 
-        pd_values = partial_derivative(model, x_values, index)
+            # reset values to their mean
+            vals = input_values.copy()
+            vals = vals.mean(axis=0)
 
-        derivative_vals[name] = pd_values
+            # adjust value of x_i
+            vals[i - 1] = n
+            vals = np.expand_dims(vals, axis=0)
+            partial_derivatives = calc_partial_derivatives(model, vals)
+            partial_derivs[j, i-1] = partial_derivatives[0, i-1]
 
-    return derivative_vals
+    partial_derivs = partial_derivs[:, keep]
+    return partial_derivs
+
+
+def plot_partial_grads(
+        gradients: np.ndarray,
+        points_to_eval: np.ndarray,
+        derivative_index: zip,
+        save: bool,
+        name: str
+):
+    """
+    This function takes the partial gradient
+    array and plots each features partial gradient
+    curve over the range of points to eval
+    """
+    for col, (label, old_index) in enumerate(derivative_index):
+        y_values = gradients[:, col]
+        plt.plot(points_to_eval, y_values, label=label)
+    plt.xlabel('Change in x_i')
+    plt.ylabel('Change in ln(price)')
+    plt.title('Partial derivative curves for selected features')
+    plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
+    if save:
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.close()
+    plt.show()
+        
