@@ -81,15 +81,16 @@ def split_to_test_dev_train(
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
 
-def random_forest_reg(
+def baseline_model(
         x_train: np.ndarray,
         y_train: np.ndarray,
+        model_func: function,
         tuning: bool,
         tuning_params: dict = None,
-        **kwargs) -> RandomForestRegressor:
+        tuning_iter: int = 10
+        **kwargs) -> List[HistGradientBoostingRegressor, RandomForestRegressor]:
     """
-    This function creates the random forest regression
-    model used as a baseline model.
+    This function creates the baseline model.
 
     Parameters:
         tuning (boolean): set to True to activate parameter tuning
@@ -102,29 +103,18 @@ def random_forest_reg(
         assert tuning_params is not None, "if 'tuning=True, tuning_params is required"
 
         tuning = RandomizedSearchCV(
-            estimator=RandomForestRegressor(**kwargs),
+            estimator=model_func(**kwargs),
             param_distributions=tuning_params,
-            n_iter = 25
+            n_iter = tuning_iter
         )
 
-        rfr = tuning.fit(x_train, y_train)
+        model = tuning.fit(x_train, y_train)
+        print("Optimal parameters based on hyperparameter tuning: ", tuning.best_params_)
 
     else:
-        rfr = RandomForestRegressor(**kwargs).fit(x_train, y_train)
+        model = model_func(**kwargs).fit(x_train, y_train)
     
-    return rfr
-
-
-def boosted_grad_reg(x_train, y_train, **kwargs) -> HistGradientBoostingRegressor:
-    """
-    This function trains a boosted regression model
-    to be used in model benchmarking
-    """
-
-    reg = HistGradientBoostingRegressor(**kwargs)
-    xgb = reg.fit(x_train, y_train)
-
-    return xgb
+    return model
 
 
 def neural_net(
@@ -269,7 +259,7 @@ def plot_partial_grads(
         derivative_index: zip,
         save: bool,
         name: str
-):
+    ):
     """
     This function takes the partial gradient
     array and plots each features partial gradient
