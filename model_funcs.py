@@ -84,11 +84,11 @@ def split_to_test_dev_train(
 def baseline_model(
         x_train: np.ndarray,
         y_train: np.ndarray,
-        model_func: function,
+        model_func: Union[HistGradientBoostingRegressor, RandomForestRegressor],
         tuning: bool,
         tuning_params: dict = None,
-        tuning_iter: int = 10
-        **kwargs) -> List[HistGradientBoostingRegressor, RandomForestRegressor]:
+        tuning_iter: int = 10,
+        **kwargs) -> Union[HistGradientBoostingRegressor, RandomForestRegressor]:
     """
     This function creates the baseline model.
 
