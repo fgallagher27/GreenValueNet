@@ -10,7 +10,7 @@ import tensorflow as tf
 from pathlib import Path
 from typing import List, Tuple, Union
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
 
 cwd = Path.cwd()
@@ -114,13 +114,13 @@ def random_forest_reg(
     return rfr
 
 
-def boosted_grad_reg(x_train, y_train, **kwargs) -> GradientBoostingRegressor:
+def boosted_grad_reg(x_train, y_train, **kwargs) -> HistGradientBoostingRegressor:
     """
     This function trains a boosted regression model
     to be used in model benchmarking
     """
 
-    reg = GradientBoostingRegressor(**kwargs)
+    reg = HistGradientBoostingRegressor(**kwargs)
     xgb = reg.fit(x_train, y_train)
 
     return xgb
