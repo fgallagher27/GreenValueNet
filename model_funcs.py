@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from pathlib import Path
 from typing import List, Tuple, Union
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
 
@@ -101,9 +101,10 @@ def random_forest_reg(
     if tuning:
         assert tuning_params is not None, "if 'tuning=True, tuning_params is required"
 
-        tuning = GridSearchCV(
+        tuning = RandomizedSearchCV(
             estimator=RandomForestRegressor(**kwargs),
-            param_grid=tuning_params
+            param_distributions=tuning_params,
+            n_iter = 25
         )
 
         rfr = tuning.fit(x_train, y_train)
