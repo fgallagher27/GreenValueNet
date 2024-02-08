@@ -63,7 +63,7 @@ where:
 
 ### Baseline models
 
-A variety of regression models were considered as benchmark models. As the regression problem was complex, a linear model was unlikely to be informative so machine learning regressions from `scikit-learn` were used. The gradient boosting regressor performed better against the mean squared error (MSE) metric and the random forest also triggered memory issues when ran locally.
+A variety of regression models were considered as benchmark models. As the regression problem was complex, a linear model was unlikely to be informative so machine learning regressions from `scikit-learn` were used. The gradient boosting regressor performed better against the mean squared error (MSE) metric and the random forest also triggered memory issues when ran locally. Hyperparameter tuning using randomised search was used for both model types.
 
 ### Structure
 
@@ -104,6 +104,8 @@ One of the main limitations in model improvement has been local memory and proce
   - This would help the model learn more complex features and patterns, but may induce a tendency to overfit to the training set.
 - **Use of alternative packages to pandas**
   - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
+- **Use bayesian updating of hyperparameters**
+  - Hyperparamter tuning of baseline models is done using randomised search but could be replaced with bayesian updating using the `hyperopt` library.
 
 ### Dataset improvements
 
