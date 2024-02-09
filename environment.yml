@@ -9,6 +9,7 @@ dependencies:
   - scipy
   - scikit-learn
   - tensorflow
+  - keras-tuner
   - geopandas
   - shapely
   - matplotlib
