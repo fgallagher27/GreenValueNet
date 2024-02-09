@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import kerastuner as kt
 from pathlib import Path
 from typing import List, Tuple, Union
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
@@ -117,53 +118,147 @@ def baseline_model(
     return model
 
 
-def neural_net(
-        x_train: Union[tf.Tensor, np.ndarray],
-        y_train: Union[tf.Tensor, np.ndarray],
+def build_neural_net(
+        input_shape: int,
         n_hidden_units: int,
         n_layers: int = 1,
         learning_rate: float = 0.01,
-        batch_size: int = 32,
-        epochs: int = 50,
         hidden_activation: str = 'relu',
         output_activation: str = 'linear',
+        optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimziers.Adam,
         loss: str = 'mean_squared_error',
-        **kwargs
+        tuning: bool = False,
+        hp_space: dict = {},
     ) -> tf.keras.Model:
     """
     This function creates a neural network model with n_layers hidden layers
     and an output layer using the activations specified.
     """
 
-    model = models.Sequential()
-    model.add(layers.InputLayer(input_shape=x_train.shape[1:]))
-    
-    # Adding hidden layers
-    for _ in range(n_layers):
-        model.add(
-            layers.Dense(
-                n_hidden_units,
-                kernel_initializer=initializers.he_normal(),
-                trainable=True)
-            )
-        model.add(layers.BatchNormalization())
-        model.add(layers.Activation(hidden_activation))
-    
-    # Adding output layer
-    model.add(layers.Dense(
-        units=1,
-        activation=output_activation,
-        kernel_initializer=initializers.glorot_normal(),
-        trainable=True))
-    
-    model.compile(
-        optimizer=tf._optimizers.Adam(learning_rate=learning_rate),
-        loss=loss,
-        metrics=['mae']
-    )
-    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, **kwargs) 
+    if tuning:
+        model = build_tuned_model(
+            kt.HyperParameters(),
+            hp_space,
+            input_shape=input_shape,
+            hidden_activation=hidden_activation,
+            output_activation=output_activation,
+            optimizer=optimizer,
+            loss=loss
+        )
+
+    else:
+        model = build_model(
+            input_shape,
+            n_layers,
+            n_hidden_units,
+            hidden_activation,
+            output_activation,
+            optimizer=optimizer,
+            loss=loss,
+            lr=learning_rate
+        )
 
     return model
+
+def build_model(
+        input_shape: int,
+        n_units: int,
+        n_layers: int = 1,
+        hidden_activation: str = 'relu', 
+        output_activation: str = 'linear',
+        optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimziers.Adam,
+        loss: str = 'mean_squared_error',
+        lr: float = 0.01,
+        dropout: bool = False,
+        d_rate: float = 0.25,
+    ) -> tf.keras.Model:
+    """
+    This function builds the model architecture
+    """
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.InputLayer(input_shape=(input_shape,)))
+
+    # Add hidden layers
+    for _ in range(n_layers):
+        model.add(
+            tf.keras.layers.Dense(
+                n_units,
+                activation=hidden_activation
+            )
+        )
+        if dropout:
+            model.add(layers.Dropout(rate=d_rate))
+
+    # Add output layer
+    model.add(
+        tf.keras.layers.Dense(
+            1,
+            activation=output_activation
+        )
+    )
+
+    # Compile the model
+    model.compile(optimizer=optimizer(learning_rate=lr), loss=loss)
+
+    return model
+
+
+def build_tuned_model(hp, **kwargs):
+    """
+    This function creates a model class with a hyperparameter
+    search space that can be tuned by running run_hp_search.
+    """
+    # TODO adjust model functions to tune number of units in different layers seperately
+    # TODO read in hp search space from config file
+    n_hidden_units = hp.Int('n_units', min_value=16, max_value=128, step=32)
+    n_layers = hp.Choice('n_layers', [5, 8, 10])
+    learning_rate = hp.Choice('lr', [0.01, 0.05, 0.1])
+
+    model = build_model(
+        n_layers = n_layers,
+        n_units = n_hidden_units,
+        lr=learning_rate,
+        **kwargs,
+    )
+    return model
+
+
+def run_hp_search(
+        x_train: Union[np.ndarray, tf.Tensor],
+        y_train: Union[np.ndarray, tf.Tensor],
+        validation_set: Tuple[Union[np.ndarray, tf.Tensor], Union[np.ndarray, tf.Tensor]],
+        search_name: str,
+        n_models_return: int = 1,
+        search_epochs: int = 5,
+        algorithm: kt.HyperModel = kt.BayesianOptimization,
+        print_summaries: bool = False,
+        **kwargs
+    ):
+    """
+    This function executes the hyperparamter search algorithms. 
+    The algorithm used is determined by the algorithm argument and
+    defaults to Bayesian Optimization
+    """
+    tuner = algorithm(
+        hypermodel=lambda hp, **hp_kwargs: build_tuned_model(
+            hp,
+            input_shape=x_train.shape[1:],
+            **hp_kwargs
+        ),
+        objective="mse",
+        max_trials=10,
+        executions_per_trial=2,
+        overwrite=True,
+        directory= cwd / 'outputs' / 'models' / 'tuning',
+        project_name=search_name,
+        **kwargs
+    )
+    if print_summaries:
+        tuner.search_space_summary()
+    tuner.search(x_train, y_train, epochs=search_epochs, validation_data=validation_set)
+    deep_nn = tuner.get_best_models(num_models=n_models_return)
+
+    return deep_nn
 
 
 def generate_pred_metric(model, metric, x_dev, y_dev):
