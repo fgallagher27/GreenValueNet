@@ -128,7 +128,6 @@ def build_neural_net(
         optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
         loss: str = 'mean_squared_error',
         tuning: bool = False,
-        hp_space: dict = {},
     ) -> tf.keras.Model:
     """
     This function creates a neural network model with n_layers hidden layers
@@ -138,7 +137,6 @@ def build_neural_net(
     if tuning:
         model = build_tuned_model(
             kt.HyperParameters(),
-            hp_space,
             input_shape=input_shape,
             hidden_activation=hidden_activation,
             output_activation=output_activation,
