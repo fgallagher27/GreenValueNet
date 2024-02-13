@@ -126,7 +126,7 @@ def build_neural_net(
         hidden_activation: str = 'relu',
         output_activation: str = 'linear',
         optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
-        loss: str = 'mean_squared_error',
+        loss: str = 'mse',
         tuning: bool = False,
     ) -> tf.keras.Model:
     """
@@ -147,8 +147,8 @@ def build_neural_net(
     else:
         model = build_model(
             input_shape,
-            n_layers,
             n_hidden_units,
+            n_layers,
             hidden_activation,
             output_activation,
             optimizer=optimizer,
@@ -165,7 +165,7 @@ def build_model(
         hidden_activation: str = 'relu', 
         output_activation: str = 'linear',
         optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
-        loss: str = 'mean_squared_error',
+        loss: str = 'mse',
         lr: float = 0.01,
         dropout: bool = False,
         d_rate: float = 0.25,
@@ -174,7 +174,7 @@ def build_model(
     This function builds the model architecture
     """
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.InputLayer(input_shape=(input_shape,)))
+    model.add(tf.keras.layers.InputLayer(input_shape=input_shape))
 
     # Add hidden layers
     for _ in range(n_layers):
@@ -196,7 +196,7 @@ def build_model(
     )
 
     # Compile the model
-    model.compile(optimizer=optimizer(learning_rate=lr), loss=loss)
+    model.compile(optimizer=optimizer(learning_rate=lr), loss=loss, metrics=[loss])
 
     return model
 
@@ -227,7 +227,7 @@ def run_hp_search(
         validation_set: Tuple[Union[np.ndarray, tf.Tensor], Union[np.ndarray, tf.Tensor]],
         search_name: str,
         n_models_return: int = 1,
-        search_epochs: int = 5,
+        search_epochs: int = 3,
         algorithm: kt.HyperModel = kt.BayesianOptimization,
         print_summaries: bool = False,
         **kwargs
@@ -245,7 +245,7 @@ def run_hp_search(
         ),
         objective="mse",
         max_trials=10,
-        executions_per_trial=2,
+        executions_per_trial=1,
         overwrite=True,
         directory= cwd / 'outputs' / 'models' / 'tuning',
         project_name=search_name,
@@ -254,9 +254,8 @@ def run_hp_search(
     if print_summaries:
         tuner.search_space_summary()
     tuner.search(x_train, y_train, epochs=search_epochs, validation_data=validation_set)
-    deep_nn = tuner.get_best_models(num_models=n_models_return)
 
-    return deep_nn
+    return tuner
 
 
 def generate_pred_metric(model, metric, x_dev, y_dev):
