@@ -325,7 +325,7 @@ def calc_partial_grad(
 
     # Loop through each feature
     keep = []
-    for key, i in derivative_index:
+    for _, i in derivative_index:
         keep.append(i-1)
 
         # Loop over values of x_i to calculate partial derivative
@@ -357,7 +357,7 @@ def plot_partial_grads(
     array and plots each features partial gradient
     curve over the range of points to eval
     """
-    for col, (label, old_index) in enumerate(derivative_index):
+    for col, (label, _) in enumerate(derivative_index):
         y_values = gradients[:, col]
         plt.plot(points_to_eval, y_values, label=label)
     plt.xlabel('Change in x_i')
@@ -368,4 +368,31 @@ def plot_partial_grads(
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
     plt.show()
-        
+
+
+def plot_loss(model, validation_data, metric):
+    """
+    This function plots the loss of a scikit learn
+    gradient boosting regression over boosting iterations
+    """
+    params = model.get_params()
+    test_score = np.zeros((params["n_estimators"],), dtype=np.float64)
+    for i, y_pred in enumerate(model.staged_predict(validation_data[0])):
+        test_score[i] = metric(validation_data[1], y_pred)
+    
+    plt.plot(
+        np.arange(params['n_estimators']) + 1,
+        model.train_score_,
+        "b-",
+        label="Training set error"
+    )
+    plt.plot(
+        np.arange(params['n_estimators']) + 1,
+        test_score,
+        "r-",
+        label="Test set error"
+    )
+    plt.legend(loc="upper right")
+    plt.xlabel("Boosting Iterations")
+    plt.ylabel("Loss")
+    plt.show()
