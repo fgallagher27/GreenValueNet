@@ -1,5 +1,5 @@
 # :deciduous_tree: GreenValueNet :ocean:
-GreenValueNet is my attempt to use machine learning to value environmental ammenities using hedonic pricing. A deep neural network can outperform gradient boosting and random forest regressions in terms of mean squared error, and enables automatic calculation of gradients used to estimate the value of open space and other environmental ammenities. This approach draws on the hedonic pricing model outlined by [Gibbons, Mourato and Resende (2013)](https://link.springer.com/article/10.1007/s10640-013-9664-9).
+GreenValueNet is my attempt to use machine learning to value environmental amenities using hedonic pricing. A deep neural network can outperform gradient boosting and random forest regressions in terms of mean squared error, and enables automatic calculation of gradients used to estimate the value of open space and other environmental amenities. This approach draws on the hedonic pricing model outlined by [Gibbons, Mourato and Resende (2013)](https://link.springer.com/article/10.1007/s10640-013-9664-9).
 ## Table of Contents
 - [Set up](#Set-up)
 - [Introduction](#introduction)
@@ -28,7 +28,7 @@ conda activate greenvalue-net
 Yoiu can then navigate to [`GreenValueNet.ipynb`](GreenValueNet.ipynb), and before executing cells you will be prompted to select a kernel. You should select the `greenvalue-net` kernel which will have the necessary version of python and relevant packages installed to run the notebook.
 
 ## Introduction
-Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmnetal economics for localised features such as urban air quality.  
+Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmental economics for localised features such as urban air quality.  
 
 To my knowledge, few attempts to use hedonic pricing to value environmental attributes at a national level exist, one example being Gibbons, Mourato and Resende (2013). Most existing approaches also use bayesian or traditional regression models, whereas my approach leverages machine learning techniques including neural networks.
 
@@ -92,38 +92,40 @@ The partial derivative curves for selected environmental features are shown belo
 
 ![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_2402016.png)
 
+As expected the deep neural network loss comes down over time and manages to outperform the gradient boosting regressor.
+
 ## Potential improvements
 
 ### Model improvements
 
-One of the main limitations in model improvement has been local memory and processing power. Potential improvements include:
+Potential improvements include:
 - **Increasing computational power**
   - Sites such as Google colab offer free GPU credits, so this could be investigated to increase computing power
   - This would enable further hyperparameter tuning of the random forest and gradient boosting baselines, but would also allow a fuller randomised hyperparameter search for the neural network. 
 - **Allowing number of hidden units to vary between layers**
   - This would help the model learn more complex features and patterns, but may induce a tendency to overfit to the training set.
-- **Use of alternative packages to pandas**
-  - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 - **Use bayesian updating of hyperparameters**
-  - Hyperparamter tuning of baseline models is done using randomised search but could be replaced with bayesian updating using the `hyperopt` library.
+  - Hyperparamter tuning of baseline models is done using randomised search but could be replaced with bayesian updating using the `hyperopt` library. The neural network tuning already uses bayesian tuning.
 
 ### Dataset improvements
 
 The dataset could be further modified to explain more of the variation in house prices and therefore improve the accuracy of the model. Computational power acts as a major constraint here.
 
 Potential modifications include:
+- **Use of alternative packages to pandas**
+  - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 - **Increasing the scope of the dataset**
-    - Widening the dataset from England to UK given many of the inputs cover regions of the UK besides England
+  - Widening the dataset from England to UK given many of the inputs cover regions of the UK besides England
 - **Increasing number of explanatory variables of house price**
-    - Including economic indicators such as interest rates or gdp growth
-    - Including year and region dummy indicators
-    - Other property specific characteristics such as garden size could be useful for capturing willingness to pay for environmental ammenities
-    - Using school catchment areas rather than striaght line distances for closest school, and including school quality explicitly (i.e. latest Ofsted inspection) as a measure of school quality
+  - Including economic indicators such as interest rates or gdp growth
+  - Including year and region dummy indicators
+  - Other property specific characteristics such as garden size could be useful for capturing willingness to pay for environmental amenities
+  - Using school catchment areas rather than striaght line distances for closest school, and including school quality explicitly (i.e. latest Ofsted inspection) as a measure of school quality
 - **Using proportions of nearby land use categories [in development]**
-    - The proportion of the square km that a property is located in covered by various land use types will enable the model to capture more information on valuation of nearby environmental attributes i.e. cropland vs forest etc.
+  - The proportion of the square km that a property is located in covered by various land use types will enable the model to capture more information on valuation of nearby environmental attributes i.e. cropland vs forest etc.
 - **Imputing missing values**
-    - There are ~1mn property sales missing key variables such as number of rooms and floor space. A K-nearest neighbours imputation exercise was attempted but was aborted due to run time and memory issues. Successfully imputing these missing values would enable a larger training set to train the model
-    - However, it is not recommended to do imputation for the postcodes that have no matching ONS ward code and therefore miss environmental attribute data. Whilst these are input features in the model, they are key variables that we calculate values for afterwards, and thus imputation may not be appropriate.
+  - There are ~1mn property sales missing key variables such as number of rooms and floor space. A K-nearest neighbours imputation exercise was attempted but was aborted due to run time and memory issues. Successfully imputing these missing values would enable a larger training set to train the model
+  - However, it is not recommended to do imputation for the postcodes that have no matching ONS ward code and therefore miss environmental attribute data. Whilst these are input features in the model, they are key variables that we calculate values for afterwards, and thus imputation may not be appropriate.
 
 ## Annex 1
 
@@ -138,7 +140,7 @@ The following datasets should be downloaded into [`data/raw_inputs`](data/raw_in
 - [Postcodes](https://osdatahub.os.uk/downloads/open/CodePointOpen)
 - [Schools](https://get-information-schools.service.gov.uk/Downloads)
 - [Coastlines](https://osdatahub.os.uk/downloads/open/BoundaryLine)
-- [Ward characteristics](ttps://www.gov.uk/government/statistics/generalised-land-use-database-statistics-for-england-200)
+- [Ward characteristics](https://www.gov.uk/government/statistics/generalised-land-use-database-statistics-for-england-200)
 - [House prices](https://reshare.ukdataservice.ac.uk/855033/)
 - [Travel to Work Areas (TTWAs)](https://geoportal.statistics.gov.uk/datasets/ons::ttwa-dec-2001-generalised-clipped-boundaries-in-the-uk/explore)
 
@@ -199,7 +201,7 @@ The Generalised Land Use Database is used to get information at the ward level o
 
 **House Prices**
 
-House price data was obtained from the UK Data Service House Price per sq metre dataset.Specific variables were then extracted and property locations were matched to environmnetal attributes based on full postcode. *[Available here](https://reshare.ukdataservice.ac.uk/855033/)*. (Accessed 21/11/2023)
+House price data was obtained from the UK Data Service House Price per sq metre dataset.Specific variables were then extracted and property locations were matched to environmental attributes based on full postcode. *[Available here](https://reshare.ukdataservice.ac.uk/855033/)*. (Accessed 21/11/2023)
 
 *Chi, Bin and Dennett, Adam and Oléron-Evans, Thomas and Morphet, Robin (2021). House Price per Square Metre in England and Wales, 1995-2021. [Data Collection]. Colchester, Essex: UK Data Service. 10.5255/UKDA-SN-855033*
 
