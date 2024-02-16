@@ -90,7 +90,7 @@ The partial derivative curves for selected environmental features are shown belo
 
 ### Model Performance
 
-![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_240206.png)
+![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_240216.png)
 
 ## Potential improvements
 

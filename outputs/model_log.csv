@@ -16,3 +16,4 @@
 08/02/2024,~13mn,XGBoost,randomised search with reduced subset,0.134,"best params: max_depth = 15, learning_rate = 0.15, max_iter = 500"
 09/02/2024,~13mn,XGBoost,randomised search with further reduced subset,0.126,"best params: max_depth = 18, learning_rate = 0.1, max_iter = 1500"
 15/02/2024,~13mn,Neural network,bayesian hp search,0.175,"best params: n_units = 16, n_Layers = 8, learning_rate = 0.01"
+16/02/2024,~13mn,Neural network,bayesian hp search,0.1373,"best params: n_units = 48, n_Layers = 10, learning_rate = 0.001"
