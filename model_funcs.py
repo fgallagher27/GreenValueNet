@@ -7,10 +7,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import kerastuner as kt
 from pathlib import Path
 from typing import List, Tuple, Union
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
 
 cwd = Path.cwd()
@@ -81,15 +82,16 @@ def split_to_test_dev_train(
     return x_train, x_dev, x_test, y_train, y_dev, y_test
 
 
-def random_forest_reg(
+def baseline_model(
         x_train: np.ndarray,
         y_train: np.ndarray,
+        model_func: Union[HistGradientBoostingRegressor, RandomForestRegressor],
         tuning: bool,
         tuning_params: dict = None,
-        **kwargs) -> RandomForestRegressor:
+        tuning_iter: int = 10,
+        **kwargs) -> Union[HistGradientBoostingRegressor, RandomForestRegressor]:
     """
-    This function creates the random forest regression
-    model used as a baseline model.
+    This function creates the baseline model.
 
     Parameters:
         tuning (boolean): set to True to activate parameter tuning
@@ -101,78 +103,158 @@ def random_forest_reg(
     if tuning:
         assert tuning_params is not None, "if 'tuning=True, tuning_params is required"
 
-        tuning = GridSearchCV(
-            estimator=RandomForestRegressor(**kwargs),
-            param_grid=tuning_params
+        tuning = RandomizedSearchCV(
+            estimator=model_func(**kwargs),
+            param_distributions=tuning_params,
+            n_iter = tuning_iter
         )
 
-        rfr = tuning.fit(x_train, y_train)
+        model = tuning.fit(x_train, y_train)
+        print("Optimal parameters based on hyperparameter tuning: ", tuning.best_params_)
 
     else:
-        rfr = RandomForestRegressor(**kwargs).fit(x_train, y_train)
+        model = model_func(**kwargs).fit(x_train, y_train)
     
-    return rfr
+    return model
 
 
-def boosted_grad_reg(x_train, y_train, **kwargs) -> GradientBoostingRegressor:
-    """
-    This function trains a boosted regression model
-    to be used in model benchmarking
-    """
-
-    reg = GradientBoostingRegressor(**kwargs)
-    xgb = reg.fit(x_train, y_train)
-
-    return xgb
-
-
-def neural_net(
-        x_train: Union[tf.Tensor, np.ndarray],
-        y_train: Union[tf.Tensor, np.ndarray],
+def build_neural_net(
+        input_shape: int,
         n_hidden_units: int,
         n_layers: int = 1,
         learning_rate: float = 0.01,
-        batch_size: int = 32,
-        epochs: int = 50,
         hidden_activation: str = 'relu',
         output_activation: str = 'linear',
-        loss: str = 'mean_squared_error',
-        **kwargs
+        optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
+        loss: str = 'mse',
+        tuning: bool = False,
     ) -> tf.keras.Model:
     """
     This function creates a neural network model with n_layers hidden layers
     and an output layer using the activations specified.
     """
 
-    model = models.Sequential()
-    model.add(layers.InputLayer(input_shape=x_train.shape[1:]))
-    
-    # Adding hidden layers
-    for _ in range(n_layers):
-        model.add(
-            layers.Dense(
-                n_hidden_units,
-                kernel_initializer=initializers.he_normal(),
-                trainable=True)
-            )
-        model.add(layers.BatchNormalization())
-        model.add(layers.Activation(hidden_activation))
-    
-    # Adding output layer
-    model.add(layers.Dense(
-        units=1,
-        activation=output_activation,
-        kernel_initializer=initializers.glorot_normal(),
-        trainable=True))
-    
-    model.compile(
-        optimizer=tf._optimizers.Adam(learning_rate=learning_rate),
-        loss=loss,
-        metrics=['mae']
-    )
-    model.fit(x_train, y_train, epochs=epochs, batch_size=batch_size, **kwargs) 
+    if tuning:
+        model = build_tuned_model(
+            kt.HyperParameters(),
+            input_shape=input_shape,
+            hidden_activation=hidden_activation,
+            output_activation=output_activation,
+            optimizer=optimizer,
+            loss=loss
+        )
+
+    else:
+        model = build_model(
+            input_shape,
+            n_hidden_units,
+            n_layers,
+            hidden_activation,
+            output_activation,
+            optimizer=optimizer,
+            loss=loss,
+            lr=learning_rate
+        )
 
     return model
+
+def build_model(
+        input_shape: int,
+        n_units: int,
+        n_layers: int = 1,
+        hidden_activation: str = 'relu', 
+        output_activation: str = 'linear',
+        optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
+        loss: str = 'mse',
+        lr: float = 0.01,
+        dropout: bool = False,
+        d_rate: float = 0.25,
+    ) -> tf.keras.Model:
+    """
+    This function builds the model architecture
+    """
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.InputLayer(input_shape=input_shape))
+
+    # Add hidden layers
+    for _ in range(n_layers):
+        model.add(
+            tf.keras.layers.Dense(
+                n_units,
+                activation=hidden_activation
+            )
+        )
+        if dropout:
+            model.add(layers.Dropout(rate=d_rate))
+
+    # Add output layer
+    model.add(
+        tf.keras.layers.Dense(
+            1,
+            activation=output_activation
+        )
+    )
+
+    # Compile the model
+    model.compile(optimizer=optimizer(learning_rate=lr), loss=loss, metrics=[loss])
+
+    return model
+
+
+def build_tuned_model(hp, **kwargs):
+    """
+    This function creates a model class with a hyperparameter
+    search space that can be tuned by running run_hp_search.
+    """
+    # TODO adjust model functions to tune number of units in different layers seperately
+    # TODO read in hp search space from config file
+    n_hidden_units = hp.Int('n_units', min_value=8, max_value=64, step=8)
+    n_layers = hp.Choice('n_layers', [5, 8, 10])
+    learning_rate = hp.Choice('lr', [0.001, 0.01, 0.1])
+
+    model = build_model(
+        n_layers = n_layers,
+        n_units = n_hidden_units,
+        lr=learning_rate,
+        **kwargs,
+    )
+    return model
+
+
+def run_hp_search(
+        x_train: Union[np.ndarray, tf.Tensor],
+        y_train: Union[np.ndarray, tf.Tensor],
+        validation_set: Tuple[Union[np.ndarray, tf.Tensor], Union[np.ndarray, tf.Tensor]],
+        search_name: str,
+        search_epochs: int = 3,
+        algorithm: kt.HyperModel = kt.BayesianOptimization,
+        print_summaries: bool = False,
+        **kwargs
+    ):
+    """
+    This function executes the hyperparamter search algorithms. 
+    The algorithm used is determined by the algorithm argument and
+    defaults to Bayesian Optimization
+    """
+    tuner = algorithm(
+        hypermodel=lambda hp, **hp_kwargs: build_tuned_model(
+            hp,
+            input_shape=x_train.shape[1:],
+            **hp_kwargs
+        ),
+        objective="mse",
+        max_trials=10,
+        executions_per_trial=1,
+        overwrite=True,
+        directory= cwd / 'outputs' / 'models' / 'tuning',
+        project_name=search_name,
+        **kwargs
+    )
+    if print_summaries:
+        tuner.search_space_summary()
+    tuner.search(x_train, y_train, epochs=search_epochs, validation_data=validation_set)
+
+    return tuner
 
 
 def generate_pred_metric(model, metric, x_dev, y_dev):
@@ -242,7 +324,7 @@ def calc_partial_grad(
 
     # Loop through each feature
     keep = []
-    for key, i in derivative_index:
+    for _, i in derivative_index:
         keep.append(i-1)
 
         # Loop over values of x_i to calculate partial derivative
@@ -268,13 +350,13 @@ def plot_partial_grads(
         derivative_index: zip,
         save: bool,
         name: str
-):
+    ):
     """
     This function takes the partial gradient
     array and plots each features partial gradient
     curve over the range of points to eval
     """
-    for col, (label, old_index) in enumerate(derivative_index):
+    for col, (label, _) in enumerate(derivative_index):
         y_values = gradients[:, col]
         plt.plot(points_to_eval, y_values, label=label)
     plt.xlabel('Change in x_i')
@@ -285,4 +367,31 @@ def plot_partial_grads(
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
     plt.show()
-        
+
+
+def plot_loss(model, validation_data, metric):
+    """
+    This function plots the loss of a scikit learn
+    gradient boosting regression over boosting iterations
+    """
+    params = model.get_params()
+    test_score = np.zeros((params["max_iter"],), dtype=np.float64)
+    for i, y_pred in enumerate(model.staged_predict(validation_data[0])):
+        test_score[i] = metric(validation_data[1], y_pred)
+    
+    plt.plot(
+        np.arange(params['max_iter']),
+        abs(model.train_score_[1:]),
+        "b-",
+        label="Training set error"
+    )
+    plt.plot(
+        np.arange(params['max_iter']),
+        test_score,
+        "r-",
+        label="Test set error"
+    )
+    plt.legend(loc="upper right")
+    plt.xlabel("Boosting Iterations")
+    plt.ylabel("Loss")
+    plt.show()
