@@ -28,7 +28,7 @@ conda activate greenvalue-net
 Yoiu can then navigate to [`GreenValueNet.ipynb`](GreenValueNet.ipynb), and before executing cells you will be prompted to select a kernel. You should select the `greenvalue-net` kernel which will have the necessary version of python and relevant packages installed to run the notebook.
 
 ## Introduction
-Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmnetal economics for localised features such as urban air quality.  
+Hedonic pricing values environmental attributes using property sale data. Controlling for property and non-environmental local charactistics, variation in property prices can be used to approximate the value people place on the existence of environmental attributes near to where they live. This approach is widely used in environmental economics for localised features such as urban air quality.  
 
 To my knowledge, few attempts to use hedonic pricing to value environmental attributes at a national level exist, one example being Gibbons, Mourato and Resende (2013). Most existing approaches also use bayesian or traditional regression models, whereas my approach leverages machine learning techniques including neural networks.
 
@@ -92,6 +92,8 @@ The partial derivative curves for selected environmental features are shown belo
 
 ![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_2402016.png)
 
+As expected the deep neural network loss comes down over time and manages to outperform the gradient boosting regressor.
+
 ## Potential improvements
 
 ### Model improvements
@@ -138,7 +140,7 @@ The following datasets should be downloaded into [`data/raw_inputs`](data/raw_in
 - [Postcodes](https://osdatahub.os.uk/downloads/open/CodePointOpen)
 - [Schools](https://get-information-schools.service.gov.uk/Downloads)
 - [Coastlines](https://osdatahub.os.uk/downloads/open/BoundaryLine)
-- [Ward characteristics](ttps://www.gov.uk/government/statistics/generalised-land-use-database-statistics-for-england-200)
+- [Ward characteristics](https://www.gov.uk/government/statistics/generalised-land-use-database-statistics-for-england-200)
 - [House prices](https://reshare.ukdataservice.ac.uk/855033/)
 - [Travel to Work Areas (TTWAs)](https://geoportal.statistics.gov.uk/datasets/ons::ttwa-dec-2001-generalised-clipped-boundaries-in-the-uk/explore)
 
@@ -199,7 +201,7 @@ The Generalised Land Use Database is used to get information at the ward level o
 
 **House Prices**
 
-House price data was obtained from the UK Data Service House Price per sq metre dataset.Specific variables were then extracted and property locations were matched to environmnetal attributes based on full postcode. *[Available here](https://reshare.ukdataservice.ac.uk/855033/)*. (Accessed 21/11/2023)
+House price data was obtained from the UK Data Service House Price per sq metre dataset.Specific variables were then extracted and property locations were matched to environmental attributes based on full postcode. *[Available here](https://reshare.ukdataservice.ac.uk/855033/)*. (Accessed 21/11/2023)
 
 *Chi, Bin and Dennett, Adam and Oléron-Evans, Thomas and Morphet, Robin (2021). House Price per Square Metre in England and Wales, 1995-2021. [Data Collection]. Colchester, Essex: UK Data Service. 10.5255/UKDA-SN-855033*
 
