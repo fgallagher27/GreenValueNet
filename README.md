@@ -1,5 +1,5 @@
 # :deciduous_tree: GreenValueNet :ocean:
-GreenValueNet is my attempt to use machine learning to value environmental ammenities using hedonic pricing. A deep neural network can outperform gradient boosting and random forest regressions in terms of mean squared error, and enables automatic calculation of gradients used to estimate the value of open space and other environmental ammenities. This approach draws on the hedonic pricing model outlined by [Gibbons, Mourato and Resende (2013)](https://link.springer.com/article/10.1007/s10640-013-9664-9).
+GreenValueNet is my attempt to use machine learning to value environmental amenities using hedonic pricing. A deep neural network can outperform gradient boosting and random forest regressions in terms of mean squared error, and enables automatic calculation of gradients used to estimate the value of open space and other environmental amenities. This approach draws on the hedonic pricing model outlined by [Gibbons, Mourato and Resende (2013)](https://link.springer.com/article/10.1007/s10640-013-9664-9).
 ## Table of Contents
 - [Set up](#Set-up)
 - [Introduction](#introduction)
@@ -98,34 +98,34 @@ As expected the deep neural network loss comes down over time and manages to out
 
 ### Model improvements
 
-One of the main limitations in model improvement has been local memory and processing power. Potential improvements include:
+Potential improvements include:
 - **Increasing computational power**
   - Sites such as Google colab offer free GPU credits, so this could be investigated to increase computing power
   - This would enable further hyperparameter tuning of the random forest and gradient boosting baselines, but would also allow a fuller randomised hyperparameter search for the neural network. 
 - **Allowing number of hidden units to vary between layers**
   - This would help the model learn more complex features and patterns, but may induce a tendency to overfit to the training set.
-- **Use of alternative packages to pandas**
-  - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 - **Use bayesian updating of hyperparameters**
-  - Hyperparamter tuning of baseline models is done using randomised search but could be replaced with bayesian updating using the `hyperopt` library.
+  - Hyperparamter tuning of baseline models is done using randomised search but could be replaced with bayesian updating using the `hyperopt` library. The neural network tuning already uses bayesian tuning.
 
 ### Dataset improvements
 
 The dataset could be further modified to explain more of the variation in house prices and therefore improve the accuracy of the model. Computational power acts as a major constraint here.
 
 Potential modifications include:
+- **Use of alternative packages to pandas**
+  - Pandas is relatively memory intensive so alternative packages such as polars could be explored. By nature spatial datasets are large so this may constrain improvements here.
 - **Increasing the scope of the dataset**
-    - Widening the dataset from England to UK given many of the inputs cover regions of the UK besides England
+  - Widening the dataset from England to UK given many of the inputs cover regions of the UK besides England
 - **Increasing number of explanatory variables of house price**
-    - Including economic indicators such as interest rates or gdp growth
-    - Including year and region dummy indicators
-    - Other property specific characteristics such as garden size could be useful for capturing willingness to pay for environmental ammenities
-    - Using school catchment areas rather than striaght line distances for closest school, and including school quality explicitly (i.e. latest Ofsted inspection) as a measure of school quality
+  - Including economic indicators such as interest rates or gdp growth
+  - Including year and region dummy indicators
+  - Other property specific characteristics such as garden size could be useful for capturing willingness to pay for environmental amenities
+  - Using school catchment areas rather than striaght line distances for closest school, and including school quality explicitly (i.e. latest Ofsted inspection) as a measure of school quality
 - **Using proportions of nearby land use categories [in development]**
-    - The proportion of the square km that a property is located in covered by various land use types will enable the model to capture more information on valuation of nearby environmental attributes i.e. cropland vs forest etc.
+  - The proportion of the square km that a property is located in covered by various land use types will enable the model to capture more information on valuation of nearby environmental attributes i.e. cropland vs forest etc.
 - **Imputing missing values**
-    - There are ~1mn property sales missing key variables such as number of rooms and floor space. A K-nearest neighbours imputation exercise was attempted but was aborted due to run time and memory issues. Successfully imputing these missing values would enable a larger training set to train the model
-    - However, it is not recommended to do imputation for the postcodes that have no matching ONS ward code and therefore miss environmental attribute data. Whilst these are input features in the model, they are key variables that we calculate values for afterwards, and thus imputation may not be appropriate.
+  - There are ~1mn property sales missing key variables such as number of rooms and floor space. A K-nearest neighbours imputation exercise was attempted but was aborted due to run time and memory issues. Successfully imputing these missing values would enable a larger training set to train the model
+  - However, it is not recommended to do imputation for the postcodes that have no matching ONS ward code and therefore miss environmental attribute data. Whilst these are input features in the model, they are key variables that we calculate values for afterwards, and thus imputation may not be appropriate.
 
 ## Annex 1
 
