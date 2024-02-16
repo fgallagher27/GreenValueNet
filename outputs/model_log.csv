@@ -13,6 +13,6 @@
 02/01/2024,~13mn,Random Forest,default,,crashed due to memory issues
 02/01/2024,~13mn,Neural network,"layers = 1, learning_rate = 0.05, epochs=69",0.2821,"MSE didn't fall through iterations, pretty constant"
 03/01/2024,~13mn,Neural network,"layers = 10, learning_rate = 0.01, epochs = 69",0.177,added he and glorot normalization in hidden and output layers
-08/02/2024,~13mn,XGBoost,initial randomised search,0.148,"best params: max_depth = 20, learning_rate = 0.2, max__iter = 150"
-08/02/2024,~13mn,XGBoost,randomised search with reduced subset,0.134,"best params: max_depth = 15, learning_rate = 0.15, max__iter = 500"
-,,,,,
+08/02/2024,~13mn,XGBoost,initial randomised search,0.148,"best params: max_depth = 20, learning_rate = 0.2, max_iter = 150"
+08/02/2024,~13mn,XGBoost,randomised search with reduced subset,0.134,"best params: max_depth = 15, learning_rate = 0.15, max_iter = 500"
+09/02/2024,~13mn,XGBoost,randomised search with further reduced subset,0.126,"best params: max_depth = 18, learning_rate = 0.1, max_iter = 1500"
