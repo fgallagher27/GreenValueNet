@@ -75,9 +75,9 @@ Through various iterations of hyperparameter tuning and model modifications, opt
 
 - Number of layers $\mathcal{l} = 10$
 - Number of input features $n_x = 21$
-- Number of hidden units $n_l = 24$
-- Learning rate $\alpha = 0.01$
-- Number of $epochs = 69$
+- Number of hidden units $n_l = 48$
+- Learning rate $\alpha = 0.001$
+- Number of $epochs = 25$
 
 Batch normalisation was also introduced during the iteration process, and he normal initialisation was used for relu layers, with glorot normal initialisation for the output layers to combat the issue of vanishing gradients that was experienced in early model runs.
 
@@ -90,7 +90,7 @@ The partial derivative curves for selected environmental features are shown belo
 
 ### Model Performance
 
-![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_240216.png)
+![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_2402016.png)
 
 ## Potential improvements
 
