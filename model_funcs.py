@@ -208,9 +208,9 @@ def build_tuned_model(hp, **kwargs):
     """
     # TODO adjust model functions to tune number of units in different layers seperately
     # TODO read in hp search space from config file
-    n_hidden_units = hp.Int('n_units', min_value=16, max_value=128, step=32)
+    n_hidden_units = hp.Int('n_units', min_value=8, max_value=64, step=8)
     n_layers = hp.Choice('n_layers', [5, 8, 10])
-    learning_rate = hp.Choice('lr', [0.01, 0.05, 0.1])
+    learning_rate = hp.Choice('lr', [0.001, 0.01, 0.1])
 
     model = build_model(
         n_layers = n_layers,
@@ -226,7 +226,6 @@ def run_hp_search(
         y_train: Union[np.ndarray, tf.Tensor],
         validation_set: Tuple[Union[np.ndarray, tf.Tensor], Union[np.ndarray, tf.Tensor]],
         search_name: str,
-        n_models_return: int = 1,
         search_epochs: int = 3,
         algorithm: kt.HyperModel = kt.BayesianOptimization,
         print_summaries: bool = False,
@@ -376,18 +375,18 @@ def plot_loss(model, validation_data, metric):
     gradient boosting regression over boosting iterations
     """
     params = model.get_params()
-    test_score = np.zeros((params["n_estimators"],), dtype=np.float64)
+    test_score = np.zeros((params["max_iter"],), dtype=np.float64)
     for i, y_pred in enumerate(model.staged_predict(validation_data[0])):
         test_score[i] = metric(validation_data[1], y_pred)
     
     plt.plot(
-        np.arange(params['n_estimators']) + 1,
-        model.train_score_,
+        np.arange(params['max_iter']),
+        abs(model.train_score_[1:]),
         "b-",
         label="Training set error"
     )
     plt.plot(
-        np.arange(params['n_estimators']) + 1,
+        np.arange(params['max_iter']),
         test_score,
         "r-",
         label="Test set error"
