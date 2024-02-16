@@ -8,7 +8,6 @@
 22/12/2023,~4mn,Neural network,"layers = 1, learning_rate = 0.05, epochs=69",0.2221,Stuck here after epoch 5
 23/12/2023,~13mn,Neural network,"layers = 10, learning_rate = 0.01, epochs = 69",0.1813,increased number of layers
 27/12/2023,~13mn,Neural network,"layers = 10, learning_rate = 0.01, epochs = 69",0.1825,added batch normalisation - server crashed on epoch 49
-27/12/2023,~13mn,Neural network,randomised search,,"randomised search: epochs = 10; learning_rate = 0.01, 0.005, 0.001; layers = 5,8,10; batch_size = 32; hidden_units: 12,18,24"
 30/12/2023,~13mn,XGBoost,default,0.1933,
 02/01/2024,~13mn,Random Forest,default,,crashed due to memory issues
 02/01/2024,~13mn,Neural network,"layers = 1, learning_rate = 0.05, epochs=69",0.2821,"MSE didn't fall through iterations, pretty constant"
@@ -16,3 +15,4 @@
 08/02/2024,~13mn,XGBoost,initial randomised search,0.148,"best params: max_depth = 20, learning_rate = 0.2, max_iter = 150"
 08/02/2024,~13mn,XGBoost,randomised search with reduced subset,0.134,"best params: max_depth = 15, learning_rate = 0.15, max_iter = 500"
 09/02/2024,~13mn,XGBoost,randomised search with further reduced subset,0.126,"best params: max_depth = 18, learning_rate = 0.1, max_iter = 1500"
+15/02/2024,~13mn,Neural network,bayesian hp search,0.175,"best params: n_units = 16, n_Layers = 8, learning_rate = 0.01"
