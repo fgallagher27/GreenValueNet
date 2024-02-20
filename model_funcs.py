@@ -22,15 +22,19 @@ def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.
     Each row corresponds to an example, and each column of x to a feature.
     """
     df = dataset.drop(columns=params['cols_out'])
+    norm_cols = [col for col in dataset.columns if col not in params['non_norm_cols']]
 
     derivative_cols = params['derivative_cols']
     derivative_index = [df.columns.get_loc(col) for col in derivative_cols]
     zipped_index = list(zip(derivative_cols, derivative_index))
 
-    x = df.drop(columns=params['target_var']).to_numpy()
+    x = df.drop(columns=params['target_var'])
+    # get indexes to normalise
+    norm_index = [x.columns.get_loc(col) for col in norm_cols]
+    x = x.to_numpy()
     y = df[params['target_var']].to_numpy()
 
-    return x,y, zipped_index
+    return x,y, zipped_index, norm_index
 
 
 def split_to_test_dev_train(
@@ -355,23 +359,57 @@ def calc_partial_grad(
     partial_derivs = partial_derivs[:, keep]
     return partial_derivs
 
+def calc_partial_grad_temp(
+        model: Union[tf.keras.Model, RandomForestRegressor, HistGradientBoostingRegressor],
+        dataset_arr: np.ndarray,
+        derivative_index: zip,
+        num_points_to_eval: np.ndarray = 100):
+    """
+    This function loops over the derivative index and
+    calculates partial derivative of each feature holding
+    all other variables at their median. It does so by sampling 
+    num_points_to_eval quantiles from the array, and then
+    approximating the gradient at this point using a very
+    simple rise / run calculation.
+    """
+    med_vals = np.median(dataset_arr, axis=0)
+    sampled_index = np.linspace(0, 100, num_points_to_eval + 1)
+    
+    gradients = {}
+    for feature, i in derivative_index:
+        # create synthetic data points
+        arr = np.zeros((num_points_to_eval + 1, dataset_arr.shape[1]))
+        sampled_vals = np.percentile(dataset_arr[:i-1], sampled_index)
+        # set all values to median
+        arr[:,:] = med_vals
+        # overwrite column i with percentile values
+        arr[:, i-1] = sampled_vals
+
+        # generate synthetic predictions
+        predictions = model.predict(arr)
+        predictions = predictions.flatten()
+        output_diff = np.diff(predictions)
+        input_diff = np.diff(sampled_index)
+        # approximate gradients as rise/run
+        gradients[feature] = (output_diff / input_diff)
+
+    return gradients
+
 
 def plot_partial_grads(
-        gradients: np.ndarray,
-        points_to_eval: np.ndarray,
-        derivative_index: zip,
-        save: bool,
-        name: str
+        gradients: dict,
+        x_points: np.ndarray,
+        save: bool = False,
+        name: str = ''
     ):
     """
     This function takes the partial gradient
     array and plots each features partial gradient
     curve over the range of points to eval
     """
-    for col, (label, _) in enumerate(derivative_index):
-        y_values = gradients[:, col]
-        plt.plot(points_to_eval, y_values, label=label)
-    plt.xlabel('Change in x_i')
+    for label, grads in gradients.items():
+        plt.plot(x_points, grads, label=label)
+    plt.xlabel('Percentile rank of x_i')
     plt.ylabel('Change in ln(price)')
     plt.title('Partial derivative curves for selected features')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))

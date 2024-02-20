@@ -307,22 +307,16 @@ def calc_share(values: List[float], totals: List[float]) -> List[float]:
     return values / totals
 
 
-def normalise_values(numbers: List[float]) -> List[float]:
+def normalise_arr(arr: np.ndarray, index: List[int]) -> np.ndarray:
     """
-    Conducts Z-normalization
-
-    Args:
-        numbers (list): A list of numbers to normalise.
-
-    Returns:
-        list: list of numbers normalised around mean 0 with std. 1
+    Normalises an array columnwise using z-normalisation.
+    The normalisation only occurs for the given list of column indexes
     """
-    arr = np.array(numbers)
-    mean = np.mean(arr)
-    std_dev = np.std(arr)
-    normalized_arr = (arr - mean) / std_dev
+    mean = np.mean(arr[:, index], axis=0)
+    std = np.std(arr[:, index], axis=0)
+    arr[:, index] = (arr[:, index] - mean) / std
+    return arr
 
-    return normalized_arr
     
 def integer_encoding(strings: List[str], exclude_strings: List[str] = []) -> tuple[List[str], dict]:
     """
