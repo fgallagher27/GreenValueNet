@@ -208,9 +208,9 @@ def build_tuned_model(hp, **kwargs):
     """
     # TODO adjust model functions to tune number of units in different layers seperately
     # TODO read in hp search space from config file
-    n_hidden_units = hp.Int('n_units', min_value=8, max_value=64, step=8)
-    n_layers = hp.Choice('n_layers', [5, 8, 10])
-    learning_rate = hp.Choice('lr', [0.001, 0.01, 0.1])
+    n_hidden_units = hp.Int('n_units', min_value=24, max_value=96, step=8)
+    n_layers = hp.Choice('n_layers', [8, 10, 12])
+    learning_rate = hp.Choice('lr', [0.001, 0.005, 0.01])
 
     model = build_model(
         n_layers = n_layers,
@@ -243,7 +243,7 @@ def run_hp_search(
             **hp_kwargs
         ),
         objective="mse",
-        max_trials=10,
+        max_trials=20,
         executions_per_trial=1,
         overwrite=True,
         directory= cwd / 'outputs' / 'models' / 'tuning',
@@ -301,6 +301,7 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     plt.legend()
     if save:
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.show()
         plt.close()
     else:
         plt.show()
@@ -376,8 +377,10 @@ def plot_partial_grads(
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.show()
         plt.close()
-    plt.show()
+    else:
+        plt.show()
 
 
 def plot_loss(model, validation_data, metric):
