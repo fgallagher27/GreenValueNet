@@ -274,18 +274,22 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     This function plots the loss of the baseline models
     and neural networks over epochs
     """
+    colours = ['blue', 'orange', 'green', 'purple']
 
-    for model, loss in nn_dict.items():
+    for i, (model, loss) in enumerate(nn_dict.items()):
+        colour=colours[i]
         plt.plot(
-            range(1, len(loss) + 1),
+            range(1, len(loss.history.history['loss']) + 1),
             loss.history.history['loss'],
-            label = model + ' - train set'
+            label = model + ' - train set',
+            color=colour
         )
         plt.plot(
-            range(1, len(loss) + 1),
+            range(1, len(loss.history.history['val_loss']) + 1),
             loss.history.history['val_loss'],
             label = model + ' - dev set',
-            linestyle='--'
+            linestyle='--',
+            color=colour
         )
     
     for model, loss in baseline_dict.items():
