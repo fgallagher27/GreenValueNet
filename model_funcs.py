@@ -278,12 +278,18 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     for model, loss in nn_dict.items():
         plt.plot(
             range(1, len(loss) + 1),
-            loss,
-            label = model
+            loss.history.history['loss'],
+            label = model + ' - train set'
+        )
+        plt.plot(
+            range(1, len(loss) + 1),
+            loss.history.history['val_loss'],
+            label = model + ' - dev set',
+            linestyle='--'
         )
     
     for model, loss in baseline_dict.items():
-        plt.axhline(y=loss, linestyle='--', label=model)
+        plt.axhline(y=loss, color='red', linestyle='--', label=model)
 
     plt.xlabel('Iteration')
     plt.ylabel('Mean Squared Error (MSE)')
@@ -292,7 +298,8 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     if save:
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.close()
-    plt.show()
+    else:
+        plt.show()
 
 
 def calc_partial_grad(
