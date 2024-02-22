@@ -265,7 +265,8 @@ def run_hp_search(
 
 
 def get_checkpoint(name:str) -> ModelCheckpoint:
-    model_dir = cwd / "outputs" / "models" / name + ".h5"
+    name += '.h5'
+    model_dir = str(cwd / "outputs" / "models" / name)
     return ModelCheckpoint(
         model_dir,
         monitor='val_loss',
