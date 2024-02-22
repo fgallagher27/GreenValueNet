@@ -13,6 +13,8 @@ from typing import List, Tuple, Union
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
+from tensorflow.keras.callbacks import ModelCheckpoint
+from processing_funcs import normalise_arr
 
 cwd = Path.cwd()
 
@@ -22,14 +24,15 @@ def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.
     Each row corresponds to an example, and each column of x to a feature.
     """
     df = dataset.drop(columns=params['cols_out'])
-    norm_cols = [col for col in dataset.columns if col not in params['non_norm_cols']]
-
+    x = df.drop(columns=params['target_var'])
+    
     derivative_cols = params['derivative_cols']
-    derivative_index = [df.columns.get_loc(col) for col in derivative_cols]
+    derivative_index = [x.columns.get_loc(col) for col in derivative_cols]
     zipped_index = list(zip(derivative_cols, derivative_index))
 
-    x = df.drop(columns=params['target_var'])
+    
     # get indexes to normalise
+    norm_cols = [col for col in dataset.columns if col not in params['non_norm_cols']]
     norm_index = [x.columns.get_loc(col) for col in norm_cols]
     x = x.to_numpy()
     y = df[params['target_var']].to_numpy()
@@ -261,6 +264,18 @@ def run_hp_search(
     return tuner
 
 
+def get_checkpoint(name:str) -> ModelCheckpoint:
+    model_dir = cwd / "outputs" / "models" / name + ".h5"
+    return ModelCheckpoint(
+        model_dir,
+        monitor='val_loss',
+        save_best_only=True,
+        save_weights_only=False,
+        mode='min',
+        verbose=1
+    )
+
+
 def generate_pred_metric(model, metric, x_dev, y_dev):
     """
     This function takes model which has a method predict
@@ -313,9 +328,12 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
 
 def calc_partial_grad(
         model: tf.keras.Model,
-        input_values: np.ndarray,
+        dataset: np.ndarray,
         derivative_index: zip,
-        points_to_eval: np.ndarray):
+        norm_index: List[int],
+        pop_mean: np.ndarray,
+        pop_std: np.ndarray,
+        num_points_to_eval: np.ndarray):
     """
     This function loops over the derivative index and
     calculates partial derivative of each feature holding
@@ -329,40 +347,46 @@ def calc_partial_grad(
         with tf.GradientTape() as tape:
             tape.watch(x_tf)
             predictions = model(x_tf)
-            target_var = predictions[0,0]
 
-        gradients = tape.gradient(target_var, x_tf)
+        gradients = tape.gradient(predictions, x_tf)
 
         return gradients.numpy()
+    
+    # initialise output dictionaries
+    gradients = {}
+    synthetic_data = {}
 
-    # Initialise empty array to store gradients
-    partial_derivs = np.zeros((len(points_to_eval), input_values.shape[1]))
+    dataset_arr = dataset.copy()
+    med_vals = np.median(dataset_arr, axis=0)
+    sampled_index = np.linspace(0, 100, num_points_to_eval + 1)
 
     # Loop through each feature
-    keep = []
-    for _, i in derivative_index:
-        keep.append(i-1)
+    for feature, i in derivative_index:
+        # create synthetic data points
+        arr = np.zeros((num_points_to_eval + 1, dataset_arr.shape[1]))
+        sorted_vals = np.sort(dataset_arr[:, i])
+        sampled_vals = np.percentile(sorted_vals, sampled_index)
+        # set all values to median
+        arr[:,:] = med_vals
+        # overwrite column i with percentile values
+        arr[:, i] = sampled_vals
 
-        # Loop over values of x_i to calculate partial derivative
-        for j, n in enumerate(points_to_eval):
+        norm_arr, _, _ = normalise_arr(arr, norm_index, pop_mean, pop_std)
 
-            # reset values to their mean
-            vals = input_values.copy()
-            vals = vals.mean(axis=0)
+        # calculate gradients using backward propagation
+        partial_derivs = calc_partial_derivatives(model, norm_arr)
+        gradients[feature] = partial_derivs[:, i]
+        synthetic_data[feature] = arr
 
-            # adjust value of x_i
-            vals[i - 1] = n
-            vals = np.expand_dims(vals, axis=0)
-            partial_derivatives = calc_partial_derivatives(model, vals)
-            partial_derivs[j, i-1] = partial_derivatives[0, i-1]
-
-    partial_derivs = partial_derivs[:, keep]
-    return partial_derivs
+    return gradients, synthetic_data
 
 def calc_partial_grad_temp(
         model: Union[tf.keras.Model, RandomForestRegressor, HistGradientBoostingRegressor],
-        dataset_arr: np.ndarray,
+        dataset: np.ndarray,
         derivative_index: zip,
+        norm_index: List[str],
+        pop_mean: np.ndarray,
+        pop_std: np.ndarray,
         num_points_to_eval: np.ndarray = 100):
     """
     This function loops over the derivative index and
@@ -372,28 +396,34 @@ def calc_partial_grad_temp(
     approximating the gradient at this point using a very
     simple rise / run calculation.
     """
+    dataset_arr = dataset.copy()
     med_vals = np.median(dataset_arr, axis=0)
     sampled_index = np.linspace(0, 100, num_points_to_eval + 1)
     
     gradients = {}
+    synthetic_data = {}
     for feature, i in derivative_index:
         # create synthetic data points
         arr = np.zeros((num_points_to_eval + 1, dataset_arr.shape[1]))
-        sampled_vals = np.percentile(dataset_arr[:i-1], sampled_index)
+        sorted_vals = np.sort(dataset_arr[:, i])
+        sampled_vals = np.percentile(sorted_vals, sampled_index)
         # set all values to median
         arr[:,:] = med_vals
         # overwrite column i with percentile values
-        arr[:, i-1] = sampled_vals
+        arr[:, i] = sampled_vals
+
+        norm_arr, _, _ = normalise_arr(arr, norm_index, pop_mean, pop_std)
 
         # generate synthetic predictions
-        predictions = model.predict(arr)
+        predictions = model.predict(norm_arr)
         predictions = predictions.flatten()
         output_diff = np.diff(predictions)
-        input_diff = np.diff(sampled_index)
+        input_diff = np.diff(sampled_vals)
         # approximate gradients as rise/run
         gradients[feature] = (output_diff / input_diff)
+        synthetic_data[feature] = arr
 
-    return gradients
+    return gradients, synthetic_data
 
 
 def plot_partial_grads(
