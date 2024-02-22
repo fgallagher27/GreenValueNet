@@ -265,7 +265,7 @@ def run_hp_search(
 
 
 def get_checkpoint(name:str) -> ModelCheckpoint:
-    name += '.h5'
+    name += '.keras'
     model_dir = str(cwd / "outputs" / "models" / name)
     return ModelCheckpoint(
         model_dir,
