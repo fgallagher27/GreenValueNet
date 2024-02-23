@@ -13,6 +13,8 @@ from typing import List, Tuple, Union
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 from tensorflow.keras import layers, models, initializers
+from tensorflow.keras.callbacks import ModelCheckpoint
+from processing_funcs import normalise_arr
 
 cwd = Path.cwd()
 
@@ -22,15 +24,20 @@ def create_x_y_arr(dataset: pd.DataFrame, params: dict) -> Tuple[np.ndarray, np.
     Each row corresponds to an example, and each column of x to a feature.
     """
     df = dataset.drop(columns=params['cols_out'])
-
+    x = df.drop(columns=params['target_var'])
+    
     derivative_cols = params['derivative_cols']
-    derivative_index = [df.columns.get_loc(col) for col in derivative_cols]
+    derivative_index = [x.columns.get_loc(col) for col in derivative_cols]
     zipped_index = list(zip(derivative_cols, derivative_index))
 
-    x = df.drop(columns=params['target_var']).to_numpy()
+    
+    # get indexes to normalise
+    norm_cols = [col for col in dataset.columns if col not in params['non_norm_cols']]
+    norm_index = [x.columns.get_loc(col) for col in norm_cols]
+    x = x.to_numpy()
     y = df[params['target_var']].to_numpy()
 
-    return x,y, zipped_index
+    return x,y, zipped_index, norm_index
 
 
 def split_to_test_dev_train(
@@ -208,9 +215,9 @@ def build_tuned_model(hp, **kwargs):
     """
     # TODO adjust model functions to tune number of units in different layers seperately
     # TODO read in hp search space from config file
-    n_hidden_units = hp.Int('n_units', min_value=8, max_value=64, step=8)
-    n_layers = hp.Choice('n_layers', [5, 8, 10])
-    learning_rate = hp.Choice('lr', [0.001, 0.01, 0.1])
+    n_hidden_units = hp.Int('n_units', min_value=48, max_value=144, step=16)
+    n_layers = hp.Choice('n_layers', [8, 10, 12])
+    learning_rate = hp.Choice('lr', [0.001, 0.01])
 
     model = build_model(
         n_layers = n_layers,
@@ -243,7 +250,7 @@ def run_hp_search(
             **hp_kwargs
         ),
         objective="mse",
-        max_trials=10,
+        max_trials=20,
         executions_per_trial=1,
         overwrite=True,
         directory= cwd / 'outputs' / 'models' / 'tuning',
@@ -255,6 +262,19 @@ def run_hp_search(
     tuner.search(x_train, y_train, epochs=search_epochs, validation_data=validation_set)
 
     return tuner
+
+
+def get_checkpoint(name:str) -> ModelCheckpoint:
+    name += '.keras'
+    model_dir = str(cwd / "outputs" / "models" / name)
+    return ModelCheckpoint(
+        model_dir,
+        monitor='val_loss',
+        save_best_only=True,
+        save_weights_only=False,
+        mode='min',
+        verbose=0
+    )
 
 
 def generate_pred_metric(model, metric, x_dev, y_dev):
@@ -269,37 +289,67 @@ def generate_pred_metric(model, metric, x_dev, y_dev):
     return pred, metric_calc
 
 
-def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: str = ''):
+def generate_plot(
+        model_dict: dict,
+        baseline_dict: dict,
+        cut_off_epoch: int = 0,
+        save: bool = False,
+        name: str = ''):
     """
     This function plots the loss of the baseline models
     and neural networks over epochs
     """
+    colours = ['blue', 'orange', 'green', 'purple']
+    nn_dict = model_dict.copy()
 
-    for model, loss in nn_dict.items():
+    for i, (model, history) in enumerate(nn_dict.items()):
+        if cut_off_epoch == 0:
+            limit = len(history['loss'])
+        else:
+            limit = cut_off_epoch
+        colour=colours[i]
+        loss_arr = history['loss'][:limit]
+        val_loss_arr = history['val_loss'][:limit]
         plt.plot(
-            range(1, len(loss) + 1),
-            loss,
-            label = model
+            range(1, len(loss_arr) + 1),
+            loss_arr,
+            label = model + ' - train set',
+            color=colour
+        )
+        plt.plot(
+            range(1, len(val_loss_arr) + 1),
+            val_loss_arr,
+            label = model + ' - dev set',
+            linestyle='--',
+            color=colour
         )
     
     for model, loss in baseline_dict.items():
-        plt.axhline(y=loss, linestyle='--', label=model)
+        plt.axhline(y=loss, color='red', linestyle='--', label=model)
 
     plt.xlabel('Iteration')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.title('Comparison of performance of models')
-    plt.legend()
+    plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
+        loss_df = pd.DataFrame(model_dict)
+        csv_name = name.split(".")[0] + "csv"
+        loss_df.transpose().to_csv(cwd / "outputs"/ csv_name)
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.show()
         plt.close()
-    plt.show()
+    else:
+        plt.show()
 
 
 def calc_partial_grad(
         model: tf.keras.Model,
-        input_values: np.ndarray,
+        dataset: np.ndarray,
         derivative_index: zip,
-        points_to_eval: np.ndarray):
+        norm_index: List[int],
+        pop_mean: np.ndarray,
+        pop_std: np.ndarray,
+        num_points_to_eval: np.ndarray):
     """
     This function loops over the derivative index and
     calculates partial derivative of each feature holding
@@ -313,60 +363,112 @@ def calc_partial_grad(
         with tf.GradientTape() as tape:
             tape.watch(x_tf)
             predictions = model(x_tf)
-            target_var = predictions[0,0]
 
-        gradients = tape.gradient(target_var, x_tf)
+        gradients = tape.gradient(predictions, x_tf)
 
         return gradients.numpy()
+    
+    # initialise output dictionaries
+    gradients = {}
+    synthetic_data = {}
 
-    # Initialise empty array to store gradients
-    partial_derivs = np.zeros((len(points_to_eval), input_values.shape[1]))
+    dataset_arr = dataset.copy()
+    med_vals = np.median(dataset_arr, axis=0)
+    sampled_index = np.linspace(0, 100, num_points_to_eval + 1)
 
     # Loop through each feature
-    keep = []
-    for _, i in derivative_index:
-        keep.append(i-1)
+    for feature, i in derivative_index:
+        # create synthetic data points
+        arr = np.zeros((num_points_to_eval + 1, dataset_arr.shape[1]))
+        sorted_vals = np.sort(dataset_arr[:, i])
+        sampled_vals = np.percentile(sorted_vals, sampled_index)
+        # set all values to median
+        arr[:,:] = med_vals
+        # overwrite column i with percentile values
+        arr[:, i] = sampled_vals
 
-        # Loop over values of x_i to calculate partial derivative
-        for j, n in enumerate(points_to_eval):
+        norm_arr, _, _ = normalise_arr(arr, norm_index, pop_mean, pop_std)
 
-            # reset values to their mean
-            vals = input_values.copy()
-            vals = vals.mean(axis=0)
+        # calculate gradients using backward propagation
+        partial_derivs = calc_partial_derivatives(model, norm_arr)
+        gradients[feature] = partial_derivs[:, i]
+        synthetic_data[feature] = arr
 
-            # adjust value of x_i
-            vals[i - 1] = n
-            vals = np.expand_dims(vals, axis=0)
-            partial_derivatives = calc_partial_derivatives(model, vals)
-            partial_derivs[j, i-1] = partial_derivatives[0, i-1]
+    return gradients, synthetic_data
 
-    partial_derivs = partial_derivs[:, keep]
-    return partial_derivs
+
+def calc_partial_grad_temp(
+        model: Union[tf.keras.Model, RandomForestRegressor, HistGradientBoostingRegressor],
+        dataset: np.ndarray,
+        derivative_index: zip,
+        norm_index: List[str],
+        pop_mean: np.ndarray,
+        pop_std: np.ndarray,
+        num_points_to_eval: np.ndarray = 100):
+    """
+    This function loops over the derivative index and
+    calculates partial derivative of each feature holding
+    all other variables at their median. It does so by sampling 
+    num_points_to_eval quantiles from the array, and then
+    approximating the gradient at this point using a very
+    simple rise / run calculation.
+    """
+    dataset_arr = dataset.copy()
+    med_vals = np.median(dataset_arr, axis=0)
+    sampled_index = np.linspace(0, 100, num_points_to_eval + 1)
+    
+    gradients = {}
+    synthetic_data = {}
+    for feature, i in derivative_index:
+        # create synthetic data points
+        arr = np.zeros((num_points_to_eval + 1, dataset_arr.shape[1]))
+        sorted_vals = np.sort(dataset_arr[:, i])
+        sampled_vals = np.percentile(sorted_vals, sampled_index)
+        # set all values to median
+        arr[:,:] = med_vals
+        # overwrite column i with percentile values
+        arr[:, i] = sampled_vals
+
+        norm_arr, _, _ = normalise_arr(arr, norm_index, pop_mean, pop_std)
+
+        # generate synthetic predictions
+        predictions = model.predict(norm_arr)
+        predictions = predictions.flatten()
+        output_diff = np.diff(predictions)
+        input_diff = np.diff(sampled_vals)
+        # approximate gradients as rise/run
+        gradients[feature] = (output_diff / input_diff)
+        synthetic_data[feature] = arr
+
+    return gradients, synthetic_data
 
 
 def plot_partial_grads(
-        gradients: np.ndarray,
-        points_to_eval: np.ndarray,
-        derivative_index: zip,
-        save: bool,
-        name: str
+        gradients: dict,
+        x_points: np.ndarray,
+        save: bool = False,
+        name: str = ''
     ):
     """
     This function takes the partial gradient
     array and plots each features partial gradient
     curve over the range of points to eval
     """
-    for col, (label, _) in enumerate(derivative_index):
-        y_values = gradients[:, col]
-        plt.plot(points_to_eval, y_values, label=label)
-    plt.xlabel('Change in x_i')
+    for label, grads in gradients.items():
+        plt.plot(x_points, grads, label=label)
+    plt.xlabel('Percentile rank of x_i')
     plt.ylabel('Change in ln(price)')
     plt.title('Partial derivative curves for selected features')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
+        grad_df = pd.DataFrame(gradients)
+        csv_name = name.split(".")[0] + "csv"
+        grad_df.transpose().to_csv(cwd / "outputs"/ csv_name)
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.show()
         plt.close()
-    plt.show()
+    else:
+        plt.show()
 
 
 def plot_loss(model, validation_data, metric):

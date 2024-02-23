@@ -106,7 +106,6 @@ default:
     - 'coastline_dist'
     - 'nat_park_dist'
     - 'nat_trust_dist'
-    - 'garden_share'
     - 'greenspace_share'
     - 'water_share'
 
