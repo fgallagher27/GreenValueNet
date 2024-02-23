@@ -312,12 +312,13 @@ def normalise_arr(arr: np.ndarray, index: List[int], mean = None, std = None) ->
     Normalises an array columnwise using z-normalisation.
     The normalisation only occurs for the given list of column indexes
     """
+    copy = arr.copy()
     if mean is None:
-        mean = np.mean(arr[:, index], axis=0)
+        mean = np.mean(copy[:, index], axis=0)
     if std is None:
-        std = np.std(arr[:, index], axis=0)
-    arr[:, index] = (arr[:, index] - mean) / std
-    return arr, mean, std
+        std = np.std(copy[:, index], axis=0)
+    copy[:, index] = (copy[:, index] - mean) / std
+    return copy, mean, std
 
     
 def integer_encoding(strings: List[str], exclude_strings: List[str] = []) -> tuple[List[str], dict]:
