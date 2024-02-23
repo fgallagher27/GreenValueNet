@@ -290,7 +290,7 @@ def generate_pred_metric(model, metric, x_dev, y_dev):
 
 
 def generate_plot(
-        nn_dict: dict,
+        model_dict: dict,
         baseline_dict: dict,
         cut_off_epoch: int = 0,
         save: bool = False,
@@ -300,15 +300,16 @@ def generate_plot(
     and neural networks over epochs
     """
     colours = ['blue', 'orange', 'green', 'purple']
+    nn_dict = model_dict.copy()
 
-    for i, (model, loss) in enumerate(nn_dict.items()):
+    for i, (model, history) in enumerate(nn_dict.items()):
         if cut_off_epoch == 0:
-            limit = len(loss.history.history['loss'])
+            limit = len(history['loss'])
         else:
             limit = cut_off_epoch
         colour=colours[i]
-        loss_arr = loss.history.history['loss'][:limit]
-        val_loss_arr = loss.history.history['val_loss'][:limit]
+        loss_arr = history['loss'][:limit]
+        val_loss_arr = history['val_loss'][:limit]
         plt.plot(
             range(1, len(loss_arr) + 1),
             loss_arr,
@@ -329,7 +330,7 @@ def generate_plot(
     plt.xlabel('Iteration')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.title('Comparison of performance of models')
-    plt.legend()
+    plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.show()
@@ -436,6 +437,8 @@ def calc_partial_grad_temp(
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
+
+
 
 
 def plot_partial_grads(
