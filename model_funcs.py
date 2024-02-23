@@ -289,7 +289,12 @@ def generate_pred_metric(model, metric, x_dev, y_dev):
     return pred, metric_calc
 
 
-def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: str = ''):
+def generate_plot(
+        nn_dict: dict,
+        baseline_dict: dict,
+        cut_off_epoch: int = 0,
+        save: bool = False,
+        name: str = ''):
     """
     This function plots the loss of the baseline models
     and neural networks over epochs
@@ -297,16 +302,22 @@ def generate_plot(nn_dict: dict, baseline_dict: dict, save: bool = False, name: 
     colours = ['blue', 'orange', 'green', 'purple']
 
     for i, (model, loss) in enumerate(nn_dict.items()):
+        if cut_off_epoch == 0:
+            limit = len(loss.history.history['loss'])
+        else:
+            limit = cut_off_epoch
         colour=colours[i]
+        loss_arr = loss.history.history['loss'][:limit]
+        val_loss_arr = loss.history.history['val_loss'][:limit]
         plt.plot(
-            range(1, len(loss.history.history['loss']) + 1),
-            loss.history.history['loss'],
+            range(1, len(loss_arr) + 1),
+            loss_arr,
             label = model + ' - train set',
             color=colour
         )
         plt.plot(
-            range(1, len(loss.history.history['val_loss']) + 1),
-            loss.history.history['val_loss'],
+            range(1, len(val_loss_arr) + 1),
+            val_loss_arr,
             label = model + ' - dev set',
             linestyle='--',
             color=colour
