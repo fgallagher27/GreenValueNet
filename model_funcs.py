@@ -215,9 +215,9 @@ def build_tuned_model(hp, **kwargs):
     """
     # TODO adjust model functions to tune number of units in different layers seperately
     # TODO read in hp search space from config file
-    n_hidden_units = hp.Int('n_units', min_value=24, max_value=96, step=8)
+    n_hidden_units = hp.Int('n_units', min_value=48, max_value=144, step=16)
     n_layers = hp.Choice('n_layers', [8, 10, 12])
-    learning_rate = hp.Choice('lr', [0.001, 0.005, 0.01])
+    learning_rate = hp.Choice('lr', [0.001, 0.01])
 
     model = build_model(
         n_layers = n_layers,
@@ -273,7 +273,7 @@ def get_checkpoint(name:str) -> ModelCheckpoint:
         save_best_only=True,
         save_weights_only=False,
         mode='min',
-        verbose=1
+        verbose=0
     )
 
 
