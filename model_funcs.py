@@ -332,6 +332,9 @@ def generate_plot(
     plt.title('Comparison of performance of models')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
+        loss_df = pd.DataFrame(model_dict)
+        csv_name = name.split(".")[0] + "csv"
+        loss_df.transpose().to_csv(cwd / "outputs"/ csv_name)
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.show()
         plt.close()
@@ -439,8 +442,6 @@ def calc_partial_grad_temp(
     return gradients, synthetic_data
 
 
-
-
 def plot_partial_grads(
         gradients: dict,
         x_points: np.ndarray,
@@ -459,6 +460,9 @@ def plot_partial_grads(
     plt.title('Partial derivative curves for selected features')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
+        grad_df = pd.DataFrame(gradients)
+        csv_name = name.split(".")[0] + "csv"
+        grad_df.transpose().to_csv(cwd / "outputs"/ csv_name)
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.show()
         plt.close()
