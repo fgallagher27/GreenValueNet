@@ -396,6 +396,7 @@ def calc_partial_grad(
 
     return gradients, synthetic_data
 
+
 def calc_partial_grad_temp(
         model: Union[tf.keras.Model, RandomForestRegressor, HistGradientBoostingRegressor],
         dataset: np.ndarray,
