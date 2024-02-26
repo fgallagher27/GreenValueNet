@@ -3,9 +3,11 @@ This script contains the functions to run the baseline and deep neural network m
 """
 
 import os
+import inspect
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import tensorflow as tf
 import kerastuner as kt
 from pathlib import Path
@@ -330,12 +332,12 @@ def generate_plot(
     plt.xlabel('Iteration')
     plt.ylabel('Mean Squared Error (MSE)')
     plt.title('Comparison of performance of models')
-    plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
+    plt.legend(loc='upper right', bbox_to_anchor=(1.65, 1))
     if save:
         loss_df = pd.DataFrame(model_dict)
-        csv_name = name.split(".")[0] + "csv"
+        csv_name = name.split(".")[0] + ".csv"
         loss_df.transpose().to_csv(cwd / "outputs"/ csv_name)
-        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+        plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:], bbox_inches='tight')
         plt.show()
         plt.close()
     else:
@@ -391,9 +393,12 @@ def calc_partial_grad(
 
         # calculate gradients using backward propagation
         partial_derivs = calc_partial_derivatives(model, norm_arr)
-        gradients[feature] = partial_derivs[:, i]
+        vals = partial_derivs[:, i]
+        vals = np.nan_to_num(vals)
+        # smooth extreme values where valuation exceeds 100_000
+        adj_vals = smooth_extreme_vals(vals, 5)
         # transform from log scale to normal numbers
-        gradients[feature] = 10 ** gradients[feature]
+        gradients[feature] = 10 ** adj_vals
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
@@ -434,16 +439,20 @@ def calc_partial_grad_linear(
         norm_arr, _, _ = normalise_arr(arr, norm_index, pop_mean, pop_std)
 
         # generate synthetic predictions
-        predictions = model.predict(norm_arr)
+        if "verbose" in inspect.signature(model.predict).parameters:
+            predictions = model.predict(norm_arr, verbose=0)
+        else:
+            predictions = model.predict(norm_arr)
         predictions = predictions.flatten()
         output_diff = np.diff(predictions)
         input_diff = np.diff(sampled_vals)
         grad_forward = (output_diff / input_diff)
         grad_backward = np.roll(output_diff, 1) / np.roll(input_diff, 1)
         # approximate gradients as rise/run averaging points either side
-        gradients[feature] = (grad_forward + grad_backward) / 2
+        vals = (grad_forward + grad_backward) / 2
+        vals = np.nan_to_num(vals)
         # transform from log scale to normal numbers
-        gradients[feature] = 10 ** gradients[feature]
+        gradients[feature] = 10 ** vals
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
@@ -463,12 +472,12 @@ def plot_partial_grads(
     for label, grads in gradients.items():
         plt.plot(x_points, grads, label=label)
     plt.xlabel('Percentile rank of x_i')
-    plt.ylabel('Change in ln(price)')
+    plt.ylabel('Change in price')
     plt.title('Partial derivative curves for selected features')
     plt.legend(loc='upper right', bbox_to_anchor=(1.5, 1))
     if save:
         grad_df = pd.DataFrame(gradients)
-        csv_name = name.split(".")[0] + "csv"
+        csv_name = name.split(".")[0] + ".csv"
         grad_df.transpose().to_csv(cwd / "outputs"/ csv_name)
         plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
         plt.show()
@@ -503,3 +512,57 @@ def plot_loss(model, validation_data, metric):
     plt.xlabel("Boosting Iterations")
     plt.ylabel("Loss")
     plt.show()
+
+
+def plot_avg_val_by_model(
+        models:dict,
+        plot: bool = True,
+        save:bool = False,
+        name: str = '',
+        grad_func: callable = calc_partial_grad_linear,
+        **kwargs) -> pd.DataFrame:
+    """
+    This function plots the average valuation by model.
+    """
+    df = pd.DataFrame()
+    for model_name, model in models.items():
+        grads, _ = grad_func(model=model, **kwargs)
+        avg_grad = {key: np.mean(values) for key, values in grads.items()}
+        avg_grad = pd.Series(avg_grad)
+        temp=pd.DataFrame({
+            'model': model_name,
+            'value': avg_grad
+        }).rename_axis('variable').reset_index(drop=False)
+        df = pd.concat([df, temp])
+    
+    if plot:
+        plt.figure(figsize = (12,10))
+        g = sns.FacetGrid(df, col='variable', col_wrap=3, height=4, sharey=False, hue='model', palette='colorblind')
+        g.map(sns.barplot, 'model', 'value', dodge=True)
+        g.set_axis_labels("Model", "Average valuation (£)")
+        g.add_legend(title='Models', loc='upper right')
+        if save:
+            csv_name = name.split(".")[0] + ".csv"
+            df.to_csv(cwd / "outputs" / csv_name)
+            plt.savefig(cwd / "outputs" / "images" / name, format=name[-3:])
+            plt.show()
+            plt.close()
+        else:
+            plt.show()
+    else:
+        if save:
+            csv_name = name.split(".")[0] + ".csv"
+            df.to_csv(cwd / "outputs" / csv_name)
+
+    return df
+
+
+def smooth_extreme_vals(arr: np.ndarray, threshold: float):
+    extreme_ind = np.where(arr > threshold)[0]
+    if len(extreme_ind) > 0:
+        left = np.maximum(0, extreme_ind - 1)
+        right = np.minimum(len(arr) - 1, extreme_ind + 1)
+        avg = (arr[left] + arr[right]) / 2
+        arr[extreme_ind] = avg
+        
+    return arr
