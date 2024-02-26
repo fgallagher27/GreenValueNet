@@ -176,6 +176,7 @@ def build_model(
         optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
         loss: str = 'mse',
         lr: float = 0.01,
+        batch_norm: bool = True,
         dropout: bool = False,
         d_rate: float = 0.25,
     ) -> tf.keras.Model:
@@ -183,16 +184,14 @@ def build_model(
     This function builds the model architecture
     """
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.InputLayer(input_shape=input_shape))
+    model.add(layers.InputLayer(input_shape=input_shape))
 
     # Add hidden layers
     for _ in range(n_layers):
-        model.add(
-            tf.keras.layers.Dense(
-                n_units,
-                activation=hidden_activation
-            )
-        )
+        model.add(layers.Dense(n_units, kernel_initializer='he_normal'))
+        if batch_norm:
+            model.add(layers.BatchNormalization())
+        model.add(layers.Activation(hidden_activation))
         if dropout:
             model.add(layers.Dropout(rate=d_rate))
 
@@ -200,7 +199,8 @@ def build_model(
     model.add(
         tf.keras.layers.Dense(
             1,
-            activation=output_activation
+            activation=output_activation,
+            kernel_initializer='glorot_normal'
         )
     )
 
@@ -351,7 +351,8 @@ def calc_partial_grad(
         norm_index: List[int],
         pop_mean: np.ndarray,
         pop_std: np.ndarray,
-        num_points_to_eval: np.ndarray):
+        num_points_to_eval: np.ndarray,
+        clip_val: float = float('inf')):
     """
     This function loops over the derivative index and
     calculates partial derivative of each feature holding
@@ -367,8 +368,10 @@ def calc_partial_grad(
             predictions = model(x_tf)
 
         gradients = tape.gradient(predictions, x_tf)
+        
+        clipped_grads = tf.clip_by_norm(gradients, clip_val)
 
-        return gradients.numpy()
+        return clipped_grads.numpy()
     
     # initialise output dictionaries
     gradients = {}
@@ -398,7 +401,7 @@ def calc_partial_grad(
         # smooth extreme values where valuation exceeds 100_000
         adj_vals = smooth_extreme_vals(vals, 5)
         # transform from log scale to normal numbers
-        gradients[feature] = 10 ** adj_vals
+        gradients[feature] = np.exp(adj_vals)
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
@@ -452,7 +455,7 @@ def calc_partial_grad_linear(
         vals = (grad_forward + grad_backward) / 2
         vals = np.nan_to_num(vals)
         # transform from log scale to normal numbers
-        gradients[feature] = 10 ** vals
+        gradients[feature] = np.exp(vals)
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
