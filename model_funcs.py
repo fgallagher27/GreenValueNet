@@ -392,12 +392,14 @@ def calc_partial_grad(
         # calculate gradients using backward propagation
         partial_derivs = calc_partial_derivatives(model, norm_arr)
         gradients[feature] = partial_derivs[:, i]
+        # transform from log scale to normal numbers
+        gradients[feature] = 10 ** gradients[feature]
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
 
 
-def calc_partial_grad_temp(
+def calc_partial_grad_linear(
         model: Union[tf.keras.Model, RandomForestRegressor, HistGradientBoostingRegressor],
         dataset: np.ndarray,
         derivative_index: zip,
