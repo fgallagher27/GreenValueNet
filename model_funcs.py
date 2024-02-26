@@ -438,8 +438,12 @@ def calc_partial_grad_linear(
         predictions = predictions.flatten()
         output_diff = np.diff(predictions)
         input_diff = np.diff(sampled_vals)
-        # approximate gradients as rise/run
-        gradients[feature] = (output_diff / input_diff)
+        grad_forward = (output_diff / input_diff)
+        grad_backward = np.roll(output_diff, 1) / np.roll(input_diff, 1)
+        # approximate gradients as rise/run averaging points either side
+        gradients[feature] = (grad_forward + grad_backward) / 2
+        # transform from log scale to normal numbers
+        gradients[feature] = 10 ** gradients[feature]
         synthetic_data[feature] = arr
 
     return gradients, synthetic_data
