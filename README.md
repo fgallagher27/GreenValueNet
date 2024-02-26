@@ -86,11 +86,11 @@ Batch normalisation was also introduced during the iteration process, and he nor
 ### Valuation
 The partial derivative curves for selected environmental features are shown below. These curves do not align with the expected trends. Verification and analysis of these trends are ongoing.
 
-![Line chart showing the gradients of the house price function with respect to specific features for various values of the feature holding all other values at their mean.](outputs/images/partial_grads_back_prop_240223.png)
+![Line chart showing the gradients of the house price function with respect to specific features for various values of the feature holding all other values at their mean.](outputs/images/partial_grads_back_prop_240226.png)
 
 ### Model Performance
 
-![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_2402023.png)
+![Line chart showing the declining mse of the neural network over iterations relative to the benchmark models.](outputs/images/model_mse_240226.png)
 
 As expected the deep neural network loss comes down over time and manages to outperform the gradient boosting regressor.
 
