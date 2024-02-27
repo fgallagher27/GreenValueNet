@@ -86,7 +86,7 @@ Batch normalisation was also introduced during the iteration process, and he nor
 ### Valuation
 The partial derivative curves for selected environmental features are shown below. These curves do not align with the expected trends. Verification and analysis of these trends are ongoing.
 
-![Line chart showing the gradients of the house price function with respect to specific features for various values of the feature holding all other values at their mean.](outputs/images/partial_grads_back_prop_240226.png)
+![Line chart showing the gradients of the house price function with respect to specific features for various values of the feature holding all other values at their mean.](outputs/images/partial_grads_back_prop_240227.png)
 
 ### Model Performance
 
