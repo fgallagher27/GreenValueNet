@@ -137,6 +137,7 @@ def build_neural_net(
         optimizer: Union[tf.keras.optimizers.Optimizer, str] = tf.keras.optimizers.Adam,
         loss: str = 'mse',
         tuning: bool = False,
+        **kwargs
     ) -> tf.keras.Model:
     """
     This function creates a neural network model with n_layers hidden layers
@@ -162,7 +163,8 @@ def build_neural_net(
             output_activation,
             optimizer=optimizer,
             loss=loss,
-            lr=learning_rate
+            lr=learning_rate,
+            **kwargs
         )
 
     return model
